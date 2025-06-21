@@ -1,5 +1,7 @@
 python-binance
 pandas
 numpy
-scikit-learn
 tensorflow
+matplotlib
+scikit-learn
+pandas_ta

@@ -1,28 +1,24 @@
-# trader.py
-
-from config import SYMBOL, QUANTITY
-from binance.client import Client
 import numpy as np
 
-from config import API_KEY, API_SECRET, BASE_URL
+def predict_and_trade(model, df, window=24):
+    feature_cols = ['SMA_10', 'EMA_10', 'RSI_14', 'MACD', 'MACD_signal', 'BB_High', 'BB_Low', 'Volume_Avg_10']
 
-client = Client(API_KEY, API_SECRET)
-client.API_URL = BASE_URL
+    # Get latest window of features for prediction
+    latest_data = df[feature_cols].iloc[-window:].values
 
-def predict_and_trade(model, df, window):
-    latest_data = df['close'].iloc[-window:].values.reshape(1, window, 1)
-    pred = model.predict(latest_data)[0][0]
-    print(f"Prediction: {pred:.2f}")
+    # Reshape to (1, window, features) for LSTM input
+    input_data = np.expand_dims(latest_data, axis=0)
 
-    if pred > 0.6:
-        print("BUY signal")
-        order = client.create_order(symbol=SYMBOL, side='BUY', type='MARKET', quantity=QUANTITY)
-        print(order)
+    # Predict probability
+    pred_prob = model.predict(input_data)[0][0]
+    print(f"Prediction: {pred_prob:.2f}")
 
-    elif pred < 0.4:
-        print("SELL signal")
-        order = client.create_order(symbol=SYMBOL, side='SELL', type='MARKET', quantity=QUANTITY)
-        print(order)
-
+    # Simple threshold decision (adjust threshold as you want)
+    if pred_prob > 0.6:
+        print("Signal: BUY")
+        # Here you would place buy order via Binance API
+    elif pred_prob < 0.4:
+        print("Signal: SELL")
+        # Here you would place sell order via Binance API
     else:
         print("No trade executed.")
