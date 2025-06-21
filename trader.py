@@ -6,7 +6,10 @@ def execute_sell(symbol, quantity):
     print(f"Executing SELL order for {quantity} units of {symbol}")
     # TODO: Add your real sell order logic here (API call, etc.)
 
-def predict_and_trade(model, df, window, feature_engineer, prob_threshold_buy=0.6, prob_threshold_sell=0.4, smooth_window=3):
+def predict_and_trade(model, df, window, feature_engineer,
+                      prob_threshold_buy=0.6, prob_threshold_sell=0.4,
+                      smooth_window=3, simulate=True,
+                      symbol=None, trade_quantity=1):
     """
     Predict market movement and decide on trade action.
 
@@ -18,6 +21,9 @@ def predict_and_trade(model, df, window, feature_engineer, prob_threshold_buy=0.
         prob_threshold_buy (float): Probability above which to buy.
         prob_threshold_sell (float): Probability below which to sell.
         smooth_window (int): Number of recent predictions to smooth over.
+        simulate (bool): If True, only simulate trades (print/log). If False, execute real orders.
+        symbol (str): Trading symbol, required for order execution.
+        trade_quantity (float or int): Quantity to trade.
 
     Prints:
         Model prediction and trade signal.
@@ -39,7 +45,7 @@ def predict_and_trade(model, df, window, feature_engineer, prob_threshold_buy=0.
         predict_and_trade.pred_history = []
 
     predict_and_trade.pred_history.append(prediction)
-    # Keep only the latest smooth_window predictions
+
     if len(predict_and_trade.pred_history) > smooth_window:
         predict_and_trade.pred_history.pop(0)
 
@@ -49,9 +55,15 @@ def predict_and_trade(model, df, window, feature_engineer, prob_threshold_buy=0.
 
     if smoothed_pred > prob_threshold_buy:
         print("Signal: BUY")
-        # TODO: Implement buy logic here
+        if simulate:
+            print(f"[SIMULATION] Would execute BUY order for {trade_quantity} {symbol}")
+        else:
+            execute_buy(symbol, trade_quantity)
     elif smoothed_pred < prob_threshold_sell:
         print("Signal: SELL")
-        # TODO: Implement sell logic here
+        if simulate:
+            print(f"[SIMULATION] Would execute SELL order for {trade_quantity} {symbol}")
+        else:
+            execute_sell(symbol, trade_quantity)
     else:
         print("Signal: HOLD - no trade executed.")

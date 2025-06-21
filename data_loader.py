@@ -10,9 +10,9 @@ def get_historical_klines(symbol, interval, lookback=LOOKBACK):
     Fetch historical klines (candlestick data) from Binance API.
 
     Args:
-        symbol (str): Trading pair symbol, e.g. 'BTCUSDT'.
-        interval (str): Interval string, e.g. '1h', '1d'.
-        lookback (str): Lookback period for data, e.g. '1 month ago UTC'.
+        symbol (str): Trading pair symbol, e.g. "BTCUSDT".
+        interval (str): Interval string, e.g. "1h", "1d".
+        lookback (str): Lookback period for data, e.g. "1 month ago UTC".
 
     Returns:
         pd.DataFrame: DataFrame with OHLCV data and timestamps.

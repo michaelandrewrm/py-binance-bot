@@ -30,22 +30,23 @@ def balance_data(X, y):
 
     return X_bal, y_bal
 
-def tune_model(X_train, y_train, input_shape):
-    os.makedirs("kt_tuner_dir", exist_ok=True)
+def tune_model(X_train, y_train, input_shape, symbol):
+    tuner_dir = f"kt_tuner_dir_{symbol}"
+    os.makedirs(tuner_dir, exist_ok=True)
 
     tuner = kt.Hyperband(
         lambda hp: build_model(hp, input_shape),
-        objective='val_accuracy',
+        objective="val_accuracy",
         max_epochs=20,
         factor=3,
-        directory='kt_tuner_dir',
-        project_name='trade_model_tuning'
+        directory=tuner_dir,
+        project_name="trade_model_tuning"
     )
 
     early_stop = EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-6)
     checkpoint = ModelCheckpoint(
-        "kt_tuner_dir/best_model_full.keras",
+        os.path.join(tuner_dir, "best_model_full.keras"),
         monitor="val_loss",
         save_best_only=True,
         mode="min",
@@ -70,10 +71,9 @@ def tune_model(X_train, y_train, input_shape):
     print(f"dense_units: {best_hp.get('dense_units')}")
     print(f"learning_rate: {best_hp.get('learning_rate')}")
 
-    model_path = "kt_tuner_dir/best_model_full.keras"
+    model_path = os.path.join(tuner_dir, "best_model_full.keras")
 
     if os.path.exists(model_path):
-        # Load model without optimizer state to avoid warning
         best_model = load_model(model_path, compile=False)
         best_model.compile(
             optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
@@ -88,11 +88,34 @@ def tune_model(X_train, y_train, input_shape):
             loss="binary_crossentropy",
             metrics=["accuracy"]
         )
-
-        # Optionally save again if needed
         best_model.save(model_path)
 
     return best_model
+
+def retrain_final_model(best_hp, X, y, input_shape):
+    print("\nRetraining final model on full dataset with best hyperparameters...")
+
+    model = build_model(best_hp, input_shape)
+    model.compile(
+        optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
+        loss="binary_crossentropy",
+        metrics=["accuracy"]
+    )
+
+    early_stop = EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-6)
+
+    model.fit(
+        X, y,
+        epochs=30,
+        validation_split=0.1,
+        callbacks=[early_stop, reduce_lr]
+    )
+
+    model.save("final_model_full_data.keras")
+    print("Final model saved as final_model_full_data.keras")
+
+    return model
 
 def main():
     print("Fetching historical data...")
@@ -104,34 +127,58 @@ def main():
     fe.save_scaler("scaler.pkl")
 
     print("Class distribution before balancing:", np.bincount(y))
-    X, y = balance_data(X, y)
-    print("Class distribution after balancing:", np.bincount(y))
-
-    print("Splitting data into time-based train/test...")
-    tscv = TimeSeriesSplit(n_splits=5)
-
-    # Use the last split
-    for train_index, test_index in tscv.split(X):
-        pass  # loop to last split
-
-    X_train, X_test = X[train_index], X[test_index]
-    y_train, y_test = y[train_index], y[test_index]
-
-    print(f"Train size: {X_train.shape}, Test size: {X_test.shape}")
 
     input_shape = (X.shape[1], X.shape[2])  # (window, number_of_features)
 
-    print("Tuning model hyperparameters...")
-    best_model = tune_model(X_train, y_train, input_shape)
+    tscv = TimeSeriesSplit(n_splits=5)
 
-    print("Evaluating best model on test set...")
-    loss, accuracy = best_model.evaluate(X_test, y_test)
-    print(f"Test Accuracy: {accuracy:.4f}")
+    fold_accuracies = []
+    fold_losses = []
 
-    print("Making final prediction and trade decision...")
+    best_accuracy = -np.inf
+    best_model = None
+    best_hp_overall = None
+
+    for fold, (train_index, test_index) in enumerate(tscv.split(X), 1):
+        print(f"\nFold {fold}")
+
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+
+        print(f"Train size: {X_train.shape}, Test size: {X_test.shape}")
+
+        X_train_bal, y_train_bal = balance_data(X_train, y_train)
+        print("Class distribution after balancing:", np.bincount(y_train_bal))
+
+        print("Tuning model hyperparameters...")
+        model, best_hp = tune_model(X_train_bal, y_train_bal, input_shape, SYMBOL)
+
+        print("Evaluating model on test fold...")
+        loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+        print(f"Fold {fold} Accuracy: {accuracy:.4f}, Loss: {loss:.4f}")
+
+        fold_accuracies.append(accuracy)
+        fold_losses.append(loss)
+
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            best_model = model
+            best_hp_overall = best_hp
+
+    print("\nCross-validation results:")
+    print(f"Mean Accuracy: {np.mean(fold_accuracies):.4f} ± {np.std(fold_accuracies):.4f}")
+    print(f"Mean Loss: {np.mean(fold_losses):.4f} ± {np.std(fold_losses):.4f}")
+
+    # Retrain final model on full dataset with best hyperparameters
+    final_model = retrain_final_model(best_hp_overall, X, y, input_shape)
+
+    print("\nMaking final prediction and trade decision with final model...")
     df_live = get_historical_klines(SYMBOL, INTERVAL)
     fe.load_scaler("scaler.pkl")
-    predict_and_trade(best_model, df_live, WINDOW, fe)
+    predict_and_trade(final_model, df_live, WINDOW, fe, simulate=True, symbol=SYMBOL, trade_quantity=1)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Error: {e}")

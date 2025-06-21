@@ -193,5 +193,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-kt_tuner_dir/*
+kt_tuner_dir_*
 scaler.pkl
