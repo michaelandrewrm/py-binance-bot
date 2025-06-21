@@ -6,7 +6,7 @@ from model import build_model
 from trader import predict_and_trade
 from config import SYMBOL, INTERVAL, WINDOW
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import TimeSeriesSplit
 from sklearn.utils import resample
 import numpy as np
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
@@ -107,8 +107,17 @@ def main():
     X, y = balance_data(X, y)
     print("Class distribution after balancing:", np.bincount(y))
 
-    print("Splitting data into train/test...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    print("Splitting data into time-based train/test...")
+    tscv = TimeSeriesSplit(n_splits=5)
+
+    # Use the last split
+    for train_index, test_index in tscv.split(X):
+        pass  # loop to last split
+
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+
+    print(f"Train size: {X_train.shape}, Test size: {X_test.shape}")
 
     input_shape = (X.shape[1], X.shape[2])  # (window, number_of_features)
 
