@@ -1,7 +1,8 @@
 python-binance
 pandas
+pandas_ta
 numpy
+scikit-learn
 tensorflow
 matplotlib
-scikit-learn
-pandas_ta
+keras-tuner
