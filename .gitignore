@@ -193,5 +193,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-kt_tuner_dir_*
+tuner_dir_*
 scaler.pkl
+platt_scaler.pkl
+final_model_full_data.keras
+
+.DS_Store

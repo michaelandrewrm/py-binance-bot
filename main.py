@@ -1,181 +1,271 @@
 import keras_tuner as kt
 import os
-from feature_engineering import FeatureEngineer
+import numpy as np
+# import joblib
+# from feature_engineering import FeatureEngineer
 from data_loader import get_historical_klines
 from model import build_model
-from trader import predict_and_trade
-from config import SYMBOL, INTERVAL, WINDOW
+# from trader import TradeSimulator
+from config import SYMBOL, INTERVAL, WINDOW, START_DATE, N_STEPS, EPOCHS, BATCH_SIZE
 
-from sklearn.model_selection import TimeSeriesSplit
-from sklearn.utils import resample
-import numpy as np
+# from sklearn.model_selection import TimeSeriesSplit
+# from sklearn.utils import resample
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
-from tensorflow.keras.models import load_model
-from tensorflow.keras.optimizers import Adam
+# from tensorflow.keras.models import load_model
+# from tensorflow.keras.optimizers import Adam
+# from sklearn.linear_model import LogisticRegression
+from visualizer import plot_predictions
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+from keras_tuner import Hyperband, HyperParameters
 
-def balance_data(X, y):
-    X_0 = X[y == 0]
-    X_1 = X[y == 1]
-    y_0 = y[y == 0]
-    y_1 = y[y == 1]
+import pandas_ta as ta
 
-    if len(X_0) > len(X_1):
-        X_1_upsampled, y_1_upsampled = resample(X_1, y_1, replace=True, n_samples=len(X_0), random_state=42)
-        X_bal = np.concatenate([X_0, X_1_upsampled])
-        y_bal = np.concatenate([y_0, y_1_upsampled])
-    else:
-        X_0_upsampled, y_0_upsampled = resample(X_0, y_0, replace=True, n_samples=len(X_1), random_state=42)
-        X_bal = np.concatenate([X_0_upsampled, X_1])
-        y_bal = np.concatenate([y_0_upsampled, y_1])
+# def balance_data(X, y):
+#     X_0 = X[y == 0]
+#     X_1 = X[y == 1]
+#     y_0 = y[y == 0]
+#     y_1 = y[y == 1]
 
-    return X_bal, y_bal
+#     if len(X_0) > len(X_1):
+#         X_1_upsampled, y_1_upsampled = resample(X_1, y_1, replace=True, n_samples=len(X_0), random_state=42)
+#         X_bal = np.concatenate([X_0, X_1_upsampled])
+#         y_bal = np.concatenate([y_0, y_1_upsampled])
+#     else:
+#         X_0_upsampled, y_0_upsampled = resample(X_0, y_0, replace=True, n_samples=len(X_1), random_state=42)
+#         X_bal = np.concatenate([X_0_upsampled, X_1])
+#         y_bal = np.concatenate([y_0_upsampled, y_1])
 
-def tune_model(X_train, y_train, input_shape, symbol):
-    tuner_dir = f"kt_tuner_dir_{symbol}"
-    os.makedirs(tuner_dir, exist_ok=True)
+#     return X_bal, y_bal
 
-    tuner = kt.Hyperband(
-        lambda hp: build_model(hp, input_shape),
-        objective="val_accuracy",
-        max_epochs=20,
-        factor=3,
-        directory=tuner_dir,
-        project_name="trade_model_tuning"
-    )
+# def tune_model(X_train, y_train, input_shape, symbol):
+#     tuner_dir = f"kt_tuner_dir_{symbol}"
+#     os.makedirs(tuner_dir, exist_ok=True)
 
-    early_stop = EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-6)
-    checkpoint = ModelCheckpoint(
-        os.path.join(tuner_dir, "best_model_full.keras"),
-        monitor="val_loss",
-        save_best_only=True,
-        mode="min",
-        verbose=1,
-        save_weights_only=False,
-    )
+#     tuner = kt.Hyperband(
+#         lambda hp: build_model(hp, input_shape),
+#         objective="val_accuracy",
+#         max_epochs=20,
+#         factor=3,
+#         directory=tuner_dir,
+#         project_name="trade_model_tuning"
+#     )
 
-    tuner.search(
-        X_train, y_train,
-        epochs=20,
-        validation_split=0.1,
-        callbacks=[early_stop, reduce_lr, checkpoint]
-    )
+#     early_stop = EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
+#     reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-6)
+#     checkpoint = ModelCheckpoint(
+#         os.path.join(tuner_dir, "best_model_full.keras"),
+#         monitor="val_loss",
+#         save_best_only=True,
+#         mode="min",
+#         verbose=1,
+#         save_weights_only=False,
+#     )
 
-    best_hp = tuner.get_best_hyperparameters(num_trials=1)[0]
+#     tuner.search(
+#         X_train, y_train,
+#         epochs=20,
+#         validation_split=0.1,
+#         callbacks=[early_stop, reduce_lr, checkpoint]
+#     )
 
-    print("Best hyperparameters:")
-    print(f"units1: {best_hp.get('units1')}")
-    print(f"dropout1: {best_hp.get('dropout1')}")
-    print(f"units2: {best_hp.get('units2')}")
-    print(f"dropout2: {best_hp.get('dropout2')}")
-    print(f"dense_units: {best_hp.get('dense_units')}")
-    print(f"learning_rate: {best_hp.get('learning_rate')}")
+#     best_hp = tuner.get_best_hyperparameters(num_trials=1)[0]
 
-    model_path = os.path.join(tuner_dir, "best_model_full.keras")
+#     model_path = os.path.join(tuner_dir, "best_model_full.keras")
 
-    if os.path.exists(model_path):
-        best_model = load_model(model_path, compile=False)
-        best_model.compile(
-            optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
-            loss="binary_crossentropy",
-            metrics=["accuracy"]
-        )
-    else:
-        print(f"Warning: {model_path} not found, using in-memory best model.")
-        best_model = tuner.get_best_models(num_models=1)[0]
-        best_model.compile(
-            optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
-            loss="binary_crossentropy",
-            metrics=["accuracy"]
-        )
-        best_model.save(model_path)
+#     if os.path.exists(model_path):
+#         best_model = load_model(model_path, compile=False)
+#         best_model.compile(
+#             optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
+#             loss="binary_crossentropy",
+#             metrics=["accuracy"]
+#         )
+#     else:
+#         best_model = tuner.get_best_models(num_models=1)[0]
+#         best_model.compile(
+#             optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
+#             loss="binary_crossentropy",
+#             metrics=["accuracy"]
+#         )
+#         best_model.save(model_path)
 
-    return best_model
+#     return best_model, best_hp
 
-def retrain_final_model(best_hp, X, y, input_shape):
-    print("\nRetraining final model on full dataset with best hyperparameters...")
+# def retrain_final_model(best_hp, X, y, input_shape):
+#     model = build_model(best_hp, input_shape)
+#     model.compile(
+#         optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
+#         loss="binary_crossentropy",
+#         metrics=["accuracy"]
+#     )
 
-    model = build_model(best_hp, input_shape)
-    model.compile(
-        optimizer=Adam(learning_rate=best_hp.get("learning_rate")),
-        loss="binary_crossentropy",
-        metrics=["accuracy"]
-    )
+#     early_stop = EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
+#     reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-6)
 
-    early_stop = EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3, min_lr=1e-6)
+#     model.fit(
+#         X, y,
+#         epochs=30,
+#         validation_split=0.1,
+#         callbacks=[early_stop, reduce_lr]
+#     )
 
-    model.fit(
-        X, y,
-        epochs=30,
-        validation_split=0.1,
-        callbacks=[early_stop, reduce_lr]
-    )
+#     model.save("final_model_full_data.keras")
+#     return model
 
-    model.save("final_model_full_data.keras")
-    print("Final model saved as final_model_full_data.keras")
+# def main():
+#     df = get_historical_klines(SYMBOL, INTERVAL)
+#     fe = FeatureEngineer(window=WINDOW)
+#     df, X, y = fe.create_features_labels(df)
+#     fe.save_scaler("scaler.pkl")
 
-    return model
+#     input_shape = (X.shape[1], X.shape[2])
+#     tscv = TimeSeriesSplit(n_splits=5)
+
+#     fold_accuracies, fold_losses = [], []
+#     best_accuracy, best_model, best_hp_overall = -np.inf, None, None
+
+#     all_probs, all_true = [], []
+
+#     for fold, (train_index, test_index) in enumerate(tscv.split(X), 1):
+#         X_train, X_test = X[train_index], X[test_index]
+#         y_train, y_test = y[train_index], y[test_index]
+
+#         X_train_bal, y_train_bal = balance_data(X_train, y_train)
+#         model, best_hp = tune_model(X_train_bal, y_train_bal, input_shape, SYMBOL)
+
+#         loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+#         y_probs = model.predict(X_test).flatten()
+#         all_probs.extend(y_probs)
+#         all_true.extend(y_test)
+
+#         fold_accuracies.append(accuracy)
+#         fold_losses.append(loss)
+
+#         if accuracy > best_accuracy:
+#             best_accuracy = accuracy
+#             best_model = model
+#             best_hp_overall = best_hp
+
+#     print(f"Mean Accuracy: {np.mean(fold_accuracies):.4f} ± {np.std(fold_accuracies):.4f}")
+#     print(f"Mean Loss: {np.mean(fold_losses):.4f} ± {np.std(fold_losses):.4f}")
+
+#     # Fit and apply Platt scaling
+#     platt_model = LogisticRegression()
+#     platt_model.fit(np.array(all_probs).reshape(-1, 1), all_true)
+#     joblib.dump(platt_model, "platt_scaler.pkl")
+#     calibrated_probs = platt_model.predict_proba(np.array(all_probs).reshape(-1, 1))[:, 1]
+
+#     # Reliability diagram
+#     plot_reliability_diagram(all_true, calibrated_probs)
+
+#     final_model = retrain_final_model(best_hp_overall, X, y, input_shape)
+#     df_live = get_historical_klines(SYMBOL, INTERVAL)
+#     fe.load_scaler("scaler.pkl")
+
+#     simulator = TradeSimulator(final_model, platt_model, WINDOW, fe, symbol=SYMBOL, trade_quantity=1)
+#     simulator.predict_and_trade(df_live, simulate=True)
+
+def add_technical_indicators(data):
+    # Calculate SMA (Simple Moving Average) for the last 20 periods
+    data['SMA_20'] = ta.sma(data['close'], length=20)
+
+    # Calculate RSI (Relative Strength Index)
+    data['RSI'] = ta.rsi(data['close'], length=14)
+
+    # Add other indicators if needed
+    # data['EMA_50'] = ta.ema(data['close'], length=50)
+    
+    # Return the modified DataFrame
+    return data
 
 def main():
-    print("Fetching historical data...")
-    df = get_historical_klines(SYMBOL, INTERVAL)
+    # Step 1: Load historical data
+    data = get_historical_klines(SYMBOL, INTERVAL, START_DATE)
+    data = add_technical_indicators(data)
 
-    print("Creating features and labels...")
-    fe = FeatureEngineer(window=WINDOW)
-    df, X, y = fe.create_features_labels(df)
-    fe.save_scaler("scaler.pkl")
+    # Step 2: Prepare data for LSTM
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    data['close_scaled'] = scaler.fit_transform(data[['close']])
 
-    print("Class distribution before balancing:", np.bincount(y))
+    # Create sequences
+    X, y = [], []
+    for i in range(N_STEPS, len(data)):
+        X.append(data['close_scaled'][i-N_STEPS:i].values)
+        y.append(data['close_scaled'][i])
 
-    input_shape = (X.shape[1], X.shape[2])  # (window, number_of_features)
+    X = np.array(X)
+    y = np.array(y)
 
-    tscv = TimeSeriesSplit(n_splits=5)
+    X = X.reshape(X.shape[0], X.shape[1], 1)
 
-    fold_accuracies = []
-    fold_losses = []
+    # Step 3: Split into train and test sets
+    train_size = int(len(X) * 0.8)
+    X_train, X_test = X[:train_size], X[train_size:]
+    y_train, y_test = y[:train_size], y[train_size:]
 
-    best_accuracy = -np.inf
-    best_model = None
-    best_hp_overall = None
+    # Hyperband search method is one of the most efficient methods for tuning hyperparameters
+    tuner_dir = f"tuner_dir_{SYMBOL}"
+    tuner = Hyperband(
+        build_model,  # Model-building function
+        objective='val_loss',  # Objective metric to minimize
+        max_epochs=EPOCHS,  # Maximum number of epochs for each trial
+        factor=3,  # Factor to reduce the number of epochs in each subsequent round
+        directory=tuner_dir,  # Directory to store the results
+        project_name='crypto_lstm_tuning',  # Project name for Keras Tuner results
+    )
 
-    for fold, (train_index, test_index) in enumerate(tscv.split(X), 1):
-        print(f"\nFold {fold}")
+    # Define the hyperparameters search space
+    # tuner.oracle.hyperparameters = [
+    #     HyperParameters.Int('units', min_value=50, max_value=200, step=50),  # Number of LSTM units
+    #     HyperParameters.Int('batch_size', values=[16, 32, 64]),  # Batch size
+    #     HyperParameters.Float('learning_rate', min_value=1e-5, max_value=1e-2, sampling='log'),  # Learning rate
+    # ]
 
-        X_train, X_test = X[train_index], X[test_index]
-        y_train, y_test = y[train_index], y[test_index]
+    # Perform Hyperparameter Search
+    tuner.search(X_train, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(X_test, y_test))
 
-        print(f"Train size: {X_train.shape}, Test size: {X_test.shape}")
+    # Get the Best Hyperparameters
+    best_hyperparameters = tuner.get_best_hyperparameters()[0]
+    print(f"Best Hyperparameters: {best_hyperparameters.values}")
 
-        X_train_bal, y_train_bal = balance_data(X_train, y_train)
-        print("Class distribution after balancing:", np.bincount(y_train_bal))
+    # Train the Model with Best Hyperparameters
+    best_model = tuner.hypermodel.build(best_hyperparameters)
 
-        print("Tuning model hyperparameters...")
-        model, best_hp = tune_model(X_train_bal, y_train_bal, input_shape, SYMBOL)
+    # Use early stopping to prevent overfitting
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
-        print("Evaluating model on test fold...")
-        loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
-        print(f"Fold {fold} Accuracy: {accuracy:.4f}, Loss: {loss:.4f}")
+    # Model checkpoint to save the best model
+    checkpoint = ModelCheckpoint(
+        os.path.join(tuner_dir, "best_model_full.keras"),
+        save_best_only=True, 
+        monitor='val_loss', 
+        mode='min'
+    )
 
-        fold_accuracies.append(accuracy)
-        fold_losses.append(loss)
+    best_model.fit(X_train, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(X_test, y_test),
+                   callbacks=[early_stopping, checkpoint])
 
-        if accuracy > best_accuracy:
-            best_accuracy = accuracy
-            best_model = model
-            best_hp_overall = best_hp
+    # Step 4: Build and train the LSTM model
+    # model = build_model(X_train)
+    # Train the model with early stopping
+    # model.fit(X_train, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(X_test, y_test), callbacks=[early_stopping])
 
-    print("\nCross-validation results:")
-    print(f"Mean Accuracy: {np.mean(fold_accuracies):.4f} ± {np.std(fold_accuracies):.4f}")
-    print(f"Mean Loss: {np.mean(fold_losses):.4f} ± {np.std(fold_losses):.4f}")
+    # Step 5: Make predictions
+    predicted_prices = best_model.predict(X_test)
+    predicted_prices = scaler.inverse_transform(predicted_prices)
+    y_test_actual = scaler.inverse_transform(y_test.reshape(-1, 1))
 
-    # Retrain final model on full dataset with best hyperparameters
-    final_model = retrain_final_model(best_hp_overall, X, y, input_shape)
+    # Calculate MSE and RMSE
+    # Mean Squared Error (MSE) gives you a measure of how far off the predicted values are from the actual values on average.
+    # Root Mean Squared Error (RMSE) is the square root of MSE, which is easier to interpret because it has the same units as the predicted values (e.g., USDT).
+    mse = mean_squared_error(y_test_actual, predicted_prices)
+    rmse = np.sqrt(mse)
 
-    print("\nMaking final prediction and trade decision with final model...")
-    df_live = get_historical_klines(SYMBOL, INTERVAL)
-    fe.load_scaler("scaler.pkl")
-    predict_and_trade(final_model, df_live, WINDOW, fe, simulate=True, symbol=SYMBOL, trade_quantity=1)
+    print(f"Mean Squared Error (MSE): {mse}")
+    print(f"Root Mean Squared Error (RMSE): {rmse}")
+
+    # Step 6: Visualize the results
+    plot_predictions(y_test_actual, predicted_prices, symbol=SYMBOL)
 
 if __name__ == "__main__":
     try:
