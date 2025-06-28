@@ -14,11 +14,11 @@ USE_TESTNET = True
 # Trading configurations
 SYMBOL = "WLDUSDC"
 INTERVAL = "1h"
-WINDOW = 24
+WINDOW = 30
 QUANTITY = 0.001
-START_DATE = "30 days ago UTC"
+START_DATE = "1 year ago UTC"
 
 # LSTM model configurations
 N_STEPS = 60              # Number of past time steps for LSTM input
 BATCH_SIZE = 32           # Batch size for model training
-EPOCHS = 20               # Number of epochs for training the model
+EPOCHS = 30               # Number of epochs for training the model

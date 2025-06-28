@@ -26,13 +26,14 @@ def get_historical_klines(symbol, interval, start_date):
         return pd.DataFrame()
 
     data = pd.DataFrame(klines, columns=[
-        "open_time", "open", "high", "low", "close", "volume", "close_time",
+        "timestamp", "open", "high", "low", "close", "volume", "close_time",
         "quote_asset_volume", "number_of_trades", "taker_buy_base_asset_volume",
         "taker_buy_quote_asset_volume", "ignore"
     ])
 
     # Convert time columns
-    data["open_time"] = pd.to_datetime(data["open_time"], unit="ms")
+    data["timestamp"] = pd.to_datetime(data["timestamp"], unit="ms")
+    data.set_index('timestamp', inplace=True)
     data["close_time"] = pd.to_datetime(data["close_time"], unit="ms")
 
     # Convert numeric columns
