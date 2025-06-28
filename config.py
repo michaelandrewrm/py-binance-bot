@@ -13,7 +13,7 @@ USE_TESTNET = True
 
 # Trading configurations
 SYMBOL = "WLDUSDC"
-INTERVAL = "1h"
+INTERVAL = "5m"
 WINDOW = 30
 QUANTITY = 0.001
 START_DATE = "1 year ago UTC"
