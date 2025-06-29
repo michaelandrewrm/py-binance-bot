@@ -23,10 +23,18 @@ def build_model(hp):
     # Bidirectional LSTM
     model.add(Bidirectional(LSTM(
         units=hp.Int('units', min_value=32, max_value=256, step=32),
-        return_sequences=False)))  # Bidirectional LSTM
+        return_sequences=False,
+        kernel_regularizer=l2(1e-4))))  # Bidirectional LSTM
+    
+    # Normalize outputs of LSTM
+    model.add(BatchNormalization())
 
-    # Dropout to prevent overfitting
+    # Dropout to reduce overfitting
     model.add(Dropout(0.2))
+
+    # Optional intermediate dense layer
+    model.add(Dense(16, activation='relu'))
+    model.add(Dropout(0.1))
 
     # Dense output layer
     model.add(Dense(units=1))
