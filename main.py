@@ -2,9 +2,10 @@ import os
 import numpy as np
 import pandas as pd
 import pandas_ta as ta
+import argparse
 from data_loader import get_historical_klines
 from model import build_model
-from config import SYMBOL, INTERVAL, START_DATE, N_STEPS, EPOCHS, BATCH_SIZE
+from config import SYMBOL, START_DATE, get_config_for_interval
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from visualizer import plot_predictions_vs_price_live, plot_backtest_profit
 from sklearn.preprocessing import MinMaxScaler
@@ -20,6 +21,16 @@ def add_technical_indicators(data):
     return data
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--interval", type=str, default="5m", help="Candlestick interval (e.g.: 5m, 15m, 1h, 4h)")
+    args = parser.parse_args()
+
+    INTERVAL = args.interval
+    config = get_config_for_interval(INTERVAL)
+    N_STEPS = config["model"]["N_STEPS"]
+    EPOCHS = config["model"]["EPOCHS"]
+    BATCH_SIZE = config["model"]["BATCH_SIZE"]
+
     data = get_historical_klines(SYMBOL, INTERVAL, START_DATE)
     data = add_technical_indicators(data)
 
@@ -45,7 +56,7 @@ def main():
     y_train, y_test = y[:train_size], y[train_size:]
 
     # Hyperband search method is one of the most efficient methods for tuning hyperparameters
-    tuner_dir = f"tuner_dir_{SYMBOL}"
+    tuner_dir = f"tuner_dir_{SYMBOL}/{INTERVAL}"
     tuner = Hyperband(
         build_model,  # Model-building function
         objective='val_loss',  # Objective metric to minimize
@@ -125,11 +136,17 @@ def main():
             })
 
     # plot_candlestick_with_trades(data, buy_orders, sell_orders, predicted_next_price)
-    plot_predictions_vs_price_live(prediction_log)
+    # plot_predictions_vs_price_live(prediction_log)
 
     aligned_data = data.iloc[-len(predicted_prices):]
-    trades = simulate_grid_trades(aligned_data, grid_spacing=0.01, levels=5, quantity=100, predictions=predicted_prices)
-    plot_backtest_profit(trades)
+    trades, diagnostics, trade_stats = simulate_grid_trades(aligned_data, predictions=predicted_prices, **config["grid"])
+    
+    for d in diagnostics[:5]:
+        print(d)
+
+    print(trade_stats)
+
+    # plot_backtest_profit(trades)
 
 if __name__ == "__main__":
     try:

@@ -1,146 +1,284 @@
-from datetime import timedelta
-
 def simulate_grid_trades(
     df,
-    grid_spacing=0.002,
-    levels=3,
-    quantity=100,
-    predictions=None,
-    base_take_profit_pct=0.004,
-    base_stop_loss_pct=0.004,
-    min_prediction_change=0.0015,
-    volatility_window=10,
-    cooldown_period=timedelta(minutes=15)
+    grid_spacing,
+    levels,
+    quantity,
+    predictions,
+    volatility_window,
+    min_volatility_threshold,
+    min_prediction_change,
+    min_expected_gain,
+    cooldown_period,
+    max_trades_per_day,
+    position_timeout_minutes,
+    max_daily_loss,
+    trailing_trigger_factor,
+    debug=True
 ):
     df = df.copy()
     trades = []
+    diagnostics = []
     long_position = None
-    short_position = None
+    trade_stats = {'TP': 0, 'SL': 0, 'TIMEOUT': 0, 'pnl_total': 0, 'pnl_avg': 0}
     last_trade_time = None
+    short_position = None
+    take_profit_pct = 0.003  # 0.3% profit target
+    stop_loss_pct = 0.002    # 0.2% risk
 
     df.loc[:, 'volatility'] = df['close'].rolling(window=volatility_window).std().bfill()
 
-    for i in range(1, len(df)):
+    trades_today = 0
+    last_day = None
+    daily_loss = 0
+
+    for i in range(0, len(df)):
         current_price = df['close'].iloc[i]
         current_time = df.index[i]
         volatility = df['volatility'].iloc[i]
 
-        if volatility < 0.002:
+        if last_day != current_time.date():
+            trades_today = 0
+            daily_loss = 0
+            last_day = current_time.date()
+
+        if volatility < min_volatility_threshold:
             continue
 
-        take_profit_pct = base_take_profit_pct * (1 + volatility)
-        stop_loss_pct = base_stop_loss_pct * (1 + volatility)
-        trailing_trigger_pct = take_profit_pct * 0.5
-        trailing_buffer_pct = 0.003
-
+        predicted_price = None
         prediction_trend = 0
+
         if predictions is not None and i < len(predictions):
             predicted_price = predictions[i]
-            prediction_trend = predicted_price - df['close'].iloc[i - 1]
+            prev_price = df['close'].iloc[i - 1] if i > 0 else df['close'].iloc[i]
+            prediction_trend = predicted_price - prev_price
 
-        base_price = df['close'].iloc[i - 1]
-        adaptive_spacing = grid_spacing * (1 + volatility * 2)
-        buy_levels = [base_price * (1 - adaptive_spacing * j) for j in range(1, levels + 1)]
-        sell_levels = [base_price * (1 + adaptive_spacing * j) for j in range(1, levels + 1)]
+        if abs(prediction_trend / current_price) < min_prediction_change:
+            continue
 
-        if long_position:
-            entry_price = long_position['price']
-            sl_price = entry_price * (1 - stop_loss_pct)
-            max_price = long_position.get('max_price', entry_price)
+        expected_gain = abs(predicted_price - current_price) / current_price if predicted_price else 0
 
-            if current_price > max_price:
-                max_price = current_price
+        if expected_gain < min_expected_gain:
+            continue
 
-            if (max_price / entry_price - 1) >= trailing_trigger_pct:
-                sl_price = max(sl_price, max_price * (1 - trailing_buffer_pct))
+        if trades_today >= max_trades_per_day or daily_loss <= -max_daily_loss:
+            continue
 
-            long_position['max_price'] = max_price
+        if (
+            predicted_price > current_price and
+            (last_trade_time is None or (current_time - last_trade_time) >= cooldown_period)
+        ):
+            long_position = {
+                'timestamp': current_time,
+                'entry_price': current_price,
+                'take_profit': current_price * (1 + take_profit_pct),
+                'stop_loss': current_price * (1 - stop_loss_pct),
+                'trailing_trigger': current_price * (1 + take_profit_pct * trailing_trigger_factor),
+                'trailing_buffer': take_profit_pct * trailing_trigger_factor * 0.5,
+                'active': True,
+                'type': 'LONG'
+            }
+            trades.append(long_position)
+            last_trade_time = current_time
+            trades_today += 1
 
-            if current_price >= entry_price * (1 + take_profit_pct):
-                trades.append({
-                    'timestamp': current_time,
-                    'action': 'SELL (TP)',
-                    'price': current_price,
-                    'quantity': quantity
+            if debug:
+                print(f"[LONG ENTRY] Time: {current_time}, Price: {current_price:.2f}")
+
+        if (
+            predicted_price < current_price and
+            (last_trade_time is None or (current_time - last_trade_time) >= cooldown_period)
+        ):
+            short_position = {
+                'timestamp': current_time,
+                'entry_price': current_price,
+                'take_profit': current_price * (1 - take_profit_pct),
+                'stop_loss': current_price * (1 + stop_loss_pct),
+                'trailing_trigger': current_price * (1 - take_profit_pct * trailing_trigger_factor),
+                'trailing_buffer': take_profit_pct * trailing_trigger_factor * 0.5,
+                'active': True,
+                'type': 'SHORT'
+            }
+            trades.append(short_position)
+            last_trade_time = current_time
+            trades_today += 1
+
+            if debug:
+                print(f"[SHORT ENTRY] Time: {current_time}, Price: {current_price:.2f}")
+
+        if long_position and long_position['active']:
+            entry_price = long_position['entry_price']
+            tp = long_position['take_profit']
+            sl = long_position['stop_loss']
+            age = (current_time - long_position['timestamp']).total_seconds() / 60
+
+            if current_price >= tp:
+                long_position.update({
+                    'exit_price': tp,
+                    'exit_time': current_time,
+                    'result': 'TP',
+                    'active': False,
+                    'pnl': (tp - entry_price) / entry_price,
                 })
-                long_position = None
-                last_trade_time = current_time
-            elif current_price <= sl_price:
-                trades.append({
-                    'timestamp': current_time,
-                    'action': 'SELL (SL)',
-                    'price': current_price,
-                    'quantity': quantity
+                long_position['usd_pnl'] = long_position['pnl'] * quantity * entry_price
+                trade_stats['TP'] += 1
+                
+                if debug:
+                    print(f"[EXIT - TP] Time: {current_time}, Price: {tp:.2f}, PnL: {long_position['pnl']:.4f}")
+
+
+            elif current_price <= sl:
+                long_position.update({
+                    'exit_price': sl,
+                    'exit_time': current_time,
+                    'result': 'SL',
+                    'active': False,
+                    'pnl': (sl - entry_price) / entry_price,
                 })
-                long_position = None
-                last_trade_time = current_time
+                long_position['usd_pnl'] = long_position['pnl'] * quantity * entry_price
+                trade_stats['SL'] += 1
 
-        if short_position:
-            entry_price = short_position['price']
-            sl_price = entry_price * (1 + stop_loss_pct)
-            min_price = short_position.get('min_price', entry_price)
+                if debug:
+                    print(f"[EXIT - SL] Time: {current_time}, Price: {sl:.2f}, PnL: {long_position['pnl']:.4f}")
 
-            if current_price < min_price:
-                min_price = current_price
-
-            if (1 - min_price / entry_price) >= trailing_trigger_pct:
-                sl_price = min(sl_price, min_price * (1 + trailing_buffer_pct))
-
-            short_position['min_price'] = min_price
-
-            if current_price <= entry_price * (1 - take_profit_pct):
-                trades.append({
-                    'timestamp': current_time,
-                    'action': 'BUY to Cover (TP)',
-                    'price': current_price,
-                    'quantity': quantity
+            elif age >= position_timeout_minutes:
+                long_position.update({
+                    'exit_price': current_price,
+                    'exit_time': current_time,
+                    'result': 'TIMEOUT',
+                    'active': False,
+                    'pnl': (current_price - entry_price) / entry_price,
                 })
-                short_position = None
-                last_trade_time = current_time
-            elif current_price >= sl_price:
-                trades.append({
-                    'timestamp': current_time,
-                    'action': 'BUY to Cover (SL)',
-                    'price': current_price,
-                    'quantity': quantity
-                })
-                short_position = None
-                last_trade_time = current_time
+                long_position['usd_pnl'] = long_position['pnl'] * quantity * entry_price
+                trade_stats['TIMEOUT'] += 1
 
-        can_trade = last_trade_time is None or (current_time - last_trade_time) >= cooldown_period
+                if debug:
+                    print(f"[EXIT - TIMEOUT] Time: {current_time}, Price: {current_price:.2f}, PnL: {long_position['pnl']:.4f}")
+            
+            elif current_price >= long_position['trailing_trigger']:
+                if 'highest_price' not in long_position:
+                    long_position['highest_price'] = current_price
 
-        if prediction_trend > min_prediction_change and long_position is None and can_trade:
-            for bp in buy_levels:
-                if current_price <= bp:
-                    trades.append({
-                        'timestamp': current_time,
-                        'action': 'BUY',
-                        'price': current_price,
-                        'quantity': quantity
+                    if debug:
+                        print(f"[TRAIL START - LONG] Triggered at {current_time}, Price: {current_price:.2f}")
+                else:
+                    long_position['highest_price'] = max(long_position['highest_price'], current_price)
+
+                    if debug:
+                        print(f"[TRAIL UPDATE - LONG] New High: {long_position['highest_price']:.2f}")
+
+                if current_price <= long_position['highest_price'] - long_position['trailing_buffer']:
+                    long_position.update({
+                        'exit_price': current_price,
+                        'exit_time': current_time,
+                        'result': 'TRAILING',
+                        'active': False,
+                        'pnl': (current_price - entry_price) / entry_price,
                     })
-                    long_position = {
-                        'price': current_price,
-                        'time': current_time,
-                        'max_price': current_price
-                    }
-                    last_trade_time = current_time
-                    break
+                    long_position['usd_pnl'] = long_position['pnl'] * quantity * entry_price
+                    trade_stats['TP'] += 1
 
-        elif prediction_trend < -min_prediction_change and short_position is None and can_trade:
-            for sp in sell_levels:
-                if current_price >= sp:
-                    trades.append({
-                        'timestamp': current_time,
-                        'action': 'SELL (Short)',
-                        'price': current_price,
-                        'quantity': quantity
+                    if debug:
+                        print(f"[EXIT - TRAILING] Time: {current_time}, Price: {current_price:.2f}, PnL: {long_position['pnl']:.4f}")
+
+
+            if 'pnl' in long_position:
+                trade_stats['pnl_total'] += long_position['pnl']
+                daily_loss += long_position['pnl']
+                trade_stats['pnl_avg'] = trade_stats['pnl_total'] / (
+                    trade_stats['TP'] + trade_stats['SL'] + trade_stats['TIMEOUT']
+                )
+
+        if short_position and short_position['active']:
+            entry_price = short_position['entry_price']
+            tp = short_position['take_profit']
+            sl = short_position['stop_loss']
+            age = (current_time - short_position['timestamp']).total_seconds() / 60
+
+            if current_price <= tp:
+                short_position.update({
+                    'exit_price': tp,
+                    'exit_time': current_time,
+                    'result': 'TP',
+                    'active': False,
+                    'pnl': (entry_price - tp) / entry_price,
+                })
+                short_position['usd_pnl'] = short_position['pnl'] * quantity * entry_price
+                trade_stats['TP'] += 1
+
+                if debug:
+                    print(f"[EXIT - TP] Time: {current_time}, Price: {tp:.2f}, PnL: {short_position['pnl']:.4f}")
+
+            elif current_price >= sl:
+                short_position.update({
+                    'exit_price': sl,
+                    'exit_time': current_time,
+                    'result': 'SL',
+                    'active': False,
+                    'pnl': (entry_price - sl) / entry_price,
+                })
+                short_position['usd_pnl'] = short_position['pnl'] * quantity * entry_price
+                trade_stats['SL'] += 1
+
+                if debug:
+                    print(f"[EXIT - SL] Time: {current_time}, Price: {sl:.2f}, PnL: {short_position['pnl']:.4f}")
+
+            elif age >= position_timeout_minutes:
+                short_position.update({
+                    'exit_price': current_price,
+                    'exit_time': current_time,
+                    'result': 'TIMEOUT',
+                    'active': False,
+                    'pnl': (entry_price - current_price) / entry_price,
+                })
+                short_position['usd_pnl'] = short_position['pnl'] * quantity * entry_price
+                trade_stats['TIMEOUT'] += 1
+
+                if debug:
+                    print(f"[EXIT - TIMEOUT] Time: {current_time}, Price: {current_price:.2f}, PnL: {short_position['pnl']:.4f}")
+            
+            elif current_price <= short_position['trailing_trigger']:
+                if 'lowest_price' not in short_position:
+                    short_position['lowest_price'] = current_price
+
+                    if debug:
+                        print(f"[TRAIL START - SHORT] Triggered at {current_time}, Price: {current_price:.2f}")
+                else:
+                    short_position['lowest_price'] = min(short_position['lowest_price'], current_price)
+
+                    if debug:
+                        print(f"[TRAIL UPDATE - SHORT] New Low: {short_position['lowest_price']:.2f}")
+
+                if current_price >= short_position['lowest_price'] + short_position['trailing_buffer']:
+                    short_position.update({
+                        'exit_price': current_price,
+                        'exit_time': current_time,
+                        'result': 'TRAILING',
+                        'active': False,
+                        'pnl': (entry_price - current_price) / entry_price,
                     })
-                    short_position = {
-                        'price': current_price,
-                        'time': current_time,
-                        'min_price': current_price
-                    }
-                    last_trade_time = current_time
-                    break
+                    short_position['usd_pnl'] = short_position['pnl'] * quantity * entry_price
+                    trade_stats['TP'] += 1
 
-    return trades
+                    if debug:
+                        print(f"[EXIT - TRAILING] Time: {current_time}, Price: {current_price:.2f}, PnL: {short_position['pnl']:.4f}")
+
+
+            if 'pnl' in short_position:
+                trade_stats['pnl_total'] += short_position['pnl']
+                daily_loss += short_position['pnl']
+                trade_stats['pnl_avg'] = trade_stats['pnl_total'] / (
+                    trade_stats['TP'] + trade_stats['SL'] + trade_stats['TIMEOUT']
+                )
+
+        diagnostics.append({
+            'timestamp': current_time,
+            'price': current_price,
+            'predicted': predicted_price,
+            'prediction_trend': prediction_trend,
+            'volatility': volatility,
+        })
+
+        if debug:
+            print(f"[SUMMARY] TP: {trade_stats['TP']} | SL: {trade_stats['SL']} | TIMEOUT: {trade_stats['TIMEOUT']} | Avg PnL: {trade_stats['pnl_avg']:.4f}")
+
+    return trades, diagnostics, trade_stats
