@@ -26,23 +26,20 @@ def get_config_for_interval(interval):
                 "BATCH_SIZE": 32
             },
             "grid": {
-                "grid_spacing": 0.0035,
-                "levels": 2,
+                "grid_spacing": 0.01, # 1% up/down
+                "levels": 5,
                 "quantity": 100,
                 "volatility_window": 10,
-                "min_volatility_threshold": 0.002,
-                "min_prediction_change": 0.001,
+                "min_volatility_threshold": 5,
+                "min_prediction_change": 0.00005,
                 "min_expected_gain": 0.0015,
                 "cooldown_period": timedelta(minutes=15),
                 "max_trades_per_day": 12,
                 "max_daily_loss": 150,
                 "trailing_trigger_factor": 0.5,
-                "position_timeout_minutes": 15
-                # "base_take_profit_pct": 0.001,
-                # "base_stop_loss_pct": 0.0015,
-                # "trailing_buffer_pct": 0.005,
-                # "entry_multiplier": 1.0,
-                # "min_price_delta": 0.001,
+                "position_timeout_minutes": 30,
+                "take_profit_pct": 0.003,
+                "stop_loss_pct": 0.002,
             },
         },
         "15m": {
@@ -52,21 +49,20 @@ def get_config_for_interval(interval):
                 "BATCH_SIZE": 32,
             },
             "grid": {
-
-                "grid_spacing": 0.005,
-                "levels": 2,
+                "grid_spacing": 0.01, # 1% up/down
+                "levels": 5,
                 "quantity": 100,
-                "base_take_profit_pct": 0.012,
-                "base_stop_loss_pct": 0.01,
-                "min_prediction_change": 0.0025,
-                "volatility_window": 14,
-                "cooldown_period": timedelta(minutes=45),
-                "max_daily_loss": 200,
-                "max_trades_per_day": 6,
+                "volatility_window": 10,
                 "min_volatility_threshold": 0.002,
+                "min_prediction_change": 0.001,
+                "min_expected_gain": 0.0015,
+                "cooldown_period": timedelta(minutes=15),
+                "max_trades_per_day": 12,
+                "max_daily_loss": 150,
                 "trailing_trigger_factor": 0.5,
-                "trailing_buffer_pct": 0.005,
-                "entry_multiplier": 1.2
+                "position_timeout_minutes": 30,
+                "take_profit_pct": 0.003,
+                "stop_loss_pct": 0.002,
             },
         },
     }
