@@ -1,28 +1,16 @@
-from binance.client import Client
 import pandas as pd
-from config import API_KEY, API_SECRET, USE_TESTNET, BASE_URL
+import logging
 
-# Create client once globally (reuse connection)
-client = Client(API_KEY, API_SECRET)
-if USE_TESTNET:
-    client.API_URL = BASE_URL
 
-def get_historical_klines(symbol, interval, start_date):
-    """
-    Fetch historical klines (candlestick data) from Binance API.
+def get_historical_klines(client, symbol, interval, start_date, logger: logging.Logger=None):
+    if logger is None:
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
 
-    Args:
-        symbol (str): Trading pair symbol, e.g. "BTCUSDT".
-        interval (str): Interval string, e.g. "1h", "1d".
-        start_date (str): start_date period for data, e.g. "1 month ago UTC".
-
-    Returns:
-        pd.DataFrame: DataFrame with OHLCV data and timestamps.
-    """
     try:
         klines = client.get_historical_klines(symbol, interval, start_date)
-    except Exception as e:
-        print(f"Error fetching data from Binance: {e}")
+    except Exception:
+        logger.error("Error fetching data from Binance", exc_info=False)
         return pd.DataFrame()
 
     data = pd.DataFrame(klines, columns=[
@@ -31,12 +19,10 @@ def get_historical_klines(symbol, interval, start_date):
         "taker_buy_quote_asset_volume", "ignore"
     ])
 
-    # Convert time columns
     data["timestamp"] = pd.to_datetime(data["timestamp"], unit="ms")
     data.set_index('timestamp', inplace=True)
     data["close_time"] = pd.to_datetime(data["close_time"], unit="ms")
 
-    # Convert numeric columns
     numeric_cols = [
         "open", "high", "low", "close", "volume", "quote_asset_volume",
         "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume"

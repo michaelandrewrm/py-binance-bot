@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 from datetime import timedelta
 
-# load environment variables from .env file
 load_dotenv()  
 
 # Binance API keys
@@ -10,11 +9,9 @@ API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 
 BASE_URL = "https://testnet.binance.vision/api"
-USE_TESTNET = True
+TESTNET = True
 
-# Trading configurations
-SYMBOL = "BTCUSDC"
-QUANTITY = 0.001
+SYMBOL = "WLDUSDC"
 START_DATE = "1 year ago UTC"
 
 def get_config_for_interval(interval):
@@ -26,9 +23,13 @@ def get_config_for_interval(interval):
                 "BATCH_SIZE": 32
             },
             "grid": {
-                "grid_spacing": 0.01, # 1% up/down
-                "levels": 5,
+                "lower_price": 1.2,
+                "upper_price": 2,
+                "levels": 10,
                 "quantity": 100,
+                "fee": 0.001,
+
+                "grid_spacing": 0.01, # 1% up/down
                 "volatility_window": 10,
                 "min_volatility_threshold": 5,
                 "min_prediction_change": 0.00005,
@@ -49,9 +50,13 @@ def get_config_for_interval(interval):
                 "BATCH_SIZE": 32,
             },
             "grid": {
-                "grid_spacing": 0.01, # 1% up/down
-                "levels": 5,
+                "lower_price": 0.5,
+                "upper_price": 2,
+                "levels": 10,
                 "quantity": 100,
+                "fee": 0.001,
+
+                "grid_spacing": 0.01, # 1% up/down
                 "volatility_window": 10,
                 "min_volatility_threshold": 0.002,
                 "min_prediction_change": 0.001,
