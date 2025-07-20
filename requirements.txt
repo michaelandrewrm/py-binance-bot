@@ -8,3 +8,4 @@ matplotlib
 keras-tuner
 mplfinance
 dateparser
+python-dotenv

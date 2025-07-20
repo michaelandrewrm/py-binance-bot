@@ -193,7 +193,7 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-tuner_dir_*
+tuner_dir*
 scaler.pkl
 platt_scaler.pkl
 final_model_full_data.keras
