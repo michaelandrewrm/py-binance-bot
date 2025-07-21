@@ -147,7 +147,7 @@ class Trader:
 
     def update_grid_from_ai(self):
         if self.get_ai_grid_parameters:
-            ai_params = self.get_ai_grid_parameters(self.symbol)
+            ai_params = self.get_ai_grid_parameters()
             try:
                 lower = float(ai_params['lower_price'])
                 upper = float(ai_params['upper_price'])
@@ -261,7 +261,7 @@ class Trader:
         try:
             while True:
                 try:
-                    if self.get_ai_grid_parameters and (time.time() - last_ai_update > self.ai_update_interval):
+                    if (time.time() - last_ai_update) > self.ai_update_interval:
                         self.logger.info("Updating grid with AI/model...")
                         self.update_grid_from_ai()
                         last_ai_update = time.time()

@@ -32,7 +32,7 @@ class Logger:
 
     def __init__(
         self,
-        name: str = "__app__",
+        name: str = "app",
         level: int = logging.INFO,
         format: str = "[%(asctime)s] %(levelname)s: %(message)s",
         force: bool = True,
@@ -52,13 +52,14 @@ class Logger:
         )
 
         self.logger = logging.getLogger(name)
+        self.logger.propagate = False
 
         # Add a stream handler if there are no handlers
         if not self.logger.handlers:
             ch = logging.StreamHandler()
             ch.setLevel(level)
             formatter = logging.Formatter(
-                '[%(asctime)s] %(levelname)s in %(name)s: %(message)s',
+                '[%(asctime)s] %(levelname)s: %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S'
             )
             ch.setFormatter(formatter)

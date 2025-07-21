@@ -4,6 +4,25 @@ import pandas as pd
 import mplfinance as mpf
 import numpy as np
 
+def plot_equity_curve_with_trades(equity_series, trades, title="Grid Strategy Equity Curve"):
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(12, 4))
+    plt.plot(equity_series.index, equity_series.values, label="Equity")
+    # Overlay buy/sell markers
+    if isinstance(trades, pd.DataFrame):
+        buy_trades = trades[trades['side'] == 'buy']
+        sell_trades = trades[trades['side'] == 'sell']
+        plt.scatter(buy_trades['time'], equity_series.loc[buy_trades['time']], color='green', marker='^', label='Buy', zorder=10)
+        plt.scatter(sell_trades['time'], equity_series.loc[sell_trades['time']], color='red', marker='v', label='Sell', zorder=10)
+    plt.title(title)
+    plt.xlabel("Time")
+    plt.ylabel("Account Equity")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
 def plot_predictions(actual, predicted, symbol):
     plt.figure(figsize=(10, 5))
     plt.plot(actual, color='blue', label="Actual Price")
