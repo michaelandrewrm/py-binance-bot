@@ -199,3 +199,5 @@ platt_scaler.pkl
 final_model_full_data.keras
 
 .DS_Store
+
+trading_bot_env
