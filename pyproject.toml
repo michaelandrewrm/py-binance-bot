@@ -7,10 +7,6 @@ addopts = [
     "--verbose",
     "--tb=short",
     "--durations=10",
-    "--cov=.",
-    "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
-    "--cov-fail-under=80",
     "--asyncio-mode=auto"
 ]
 testpaths = ["tests"]

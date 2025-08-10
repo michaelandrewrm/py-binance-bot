@@ -1,11 +1,11 @@
-from . import core
-from . import data
-from . import exec
-from . import sim
-from . import storage
-from . import ui
-from . import ai
-from . import reports
+import core
+import data
+import exec
+import sim
+import storage
+import ui
+import ai
+import reports
 
 """
 Binance Trading Bot Package

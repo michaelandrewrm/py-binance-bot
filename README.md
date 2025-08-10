@@ -253,14 +253,14 @@ The trading bot features a comprehensive test suite with **167+ unit tests** ens
 # Run all tests
 pytest
 
-# Run with coverage report
+# Run in quiet mode
+pytest -q
+
+# Run with coverage report (requires: pip install pytest-cov)
 pytest --cov --cov-report=html
 
 # Run specific test module
 pytest tests/test_safety.py -v
-
-# Run tests in quiet mode
-pytest -q
 ```
 
 ---
