@@ -37,7 +37,7 @@ repo = SQLiteRepository("production_bot.db")
 trade = TradeRecord(
     run_id="session_123",
     order_id="binance_456",
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     side="BUY",
     quantity=Decimal("0.001"),
     price=Decimal("50000"),
@@ -53,7 +53,7 @@ repo.save_trade(trade)
 - **Example**:
 ```python
 trades = repo.load_trades(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     start_time=datetime.now() - timedelta(days=7),
     limit=100
 )
@@ -66,7 +66,7 @@ trades = repo.load_trades(
 - **What for**: Market analysis, strategy development, and backtesting
 - **Example**:
 ```python
-repo.save_klines(klines_list, "BTCUSDT", "1h")
+repo.save_klines(klines_list, "BTCUSDC", "1h")
 # Saves hourly kline data with deduplication
 ```
 
@@ -77,7 +77,7 @@ repo.save_klines(klines_list, "BTCUSDT", "1h")
 - **Example**:
 ```python
 klines = repo.load_klines(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     interval="1h",
     start_time=datetime.now() - timedelta(days=30)
 )
@@ -92,7 +92,7 @@ klines = repo.load_klines(
 ```python
 result = BacktestResult(
     strategy_name="grid_trading",
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     start_time=start_dt,
     end_time=end_dt,
     initial_capital=Decimal("1000"),
@@ -112,7 +112,7 @@ repo.save_backtest_result(result)
 ```python
 results = repo.load_backtest_results(
     strategy_name="grid_trading",
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     limit=10
 )
 # Returns: List[BacktestResult] for recent backtests
@@ -180,7 +180,7 @@ file_repo = FileRepository("trading_data")
 - **What for**: High-performance data storage and analytics
 - **Example**:
 ```python
-file_repo.save_klines_parquet(klines_list, "BTCUSDT", "1m")
+file_repo.save_klines_parquet(klines_list, "BTCUSDC", "1m")
 # Saves data in compressed Parquet format
 ```
 
@@ -190,7 +190,7 @@ file_repo.save_klines_parquet(klines_list, "BTCUSDT", "1m")
 - **What for**: Analytics and backtesting with large data volumes
 - **Example**:
 ```python
-klines = file_repo.load_klines_parquet("BTCUSDT", "1m")
+klines = file_repo.load_klines_parquet("BTCUSDC", "1m")
 # Returns: List[KlineData] loaded from Parquet
 ```
 
@@ -214,7 +214,7 @@ artifact_mgr = ArtifactManager("ml_models")
 ```python
 metadata = {
     "accuracy": 0.87,
-    "training_data": "BTCUSDT_2024_Q1",
+    "training_data": "BTCUSDC_2024_Q1",
     "features": ["SMA", "RSI", "MACD"]
 }
 artifact_mgr.save_model(

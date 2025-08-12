@@ -535,7 +535,7 @@ async def run_trading_bot(client: Optional[BinanceClient] = None,
         if state is None:
             from core.state import create_empty_state
             # Use a default symbol if no config available
-            state = create_empty_state("BTCUSDT")
+            state = create_empty_state("BTCUSDC")
         
         # Initialize safety manager
         safety_manager = SafetyManager(risk_limits or RiskLimits())

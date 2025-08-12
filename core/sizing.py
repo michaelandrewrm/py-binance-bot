@@ -199,7 +199,7 @@ def create_binance_exchange_info(symbol: str, price: Decimal) -> ExchangeInfo:
     Note: In production, this should be fetched from the API
     """
     # Common Binance constraints (these should be fetched from API)
-    if "USDT" in symbol.upper():
+    if "USDC" in symbol.upper():
         return ExchangeInfo(
             symbol=symbol,
             min_qty=Decimal('0.00001'),

@@ -291,7 +291,7 @@ class BotState:
         total_value = Decimal('0')
         
         for asset, balance in self.balances.items():
-            if asset == "USDT":
+            if asset == "USDC":
                 total_value += balance.total
             elif asset in prices:
                 total_value += balance.total * prices[asset]

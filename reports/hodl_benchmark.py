@@ -58,7 +58,7 @@ class HODLBenchmark:
         exit_price = filtered_klines[-1].close_price
         
         # Calculate entry transaction with fees
-        # When buying, we pay fees on the quote amount (USDT/USD)
+        # When buying, we pay fees on the quote amount (USDC/USD)
         entry_fee_rate = self.fee_config.taker_fee  # Assume market order (taker)
         if self.fee_config.use_bnb:
             entry_fee_rate *= self.fee_config.bnb_discount

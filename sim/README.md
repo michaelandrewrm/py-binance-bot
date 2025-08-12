@@ -29,7 +29,7 @@ This directory contains simulation and backtesting components for strategy testi
 - **Example**:
 ```python
 config = BacktestConfig(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     start_date=datetime(2024, 1, 1),
     end_date=datetime(2024, 6, 30),
     initial_capital=Decimal("10000"),

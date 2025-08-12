@@ -25,7 +25,7 @@ This directory contains data handling and loading modules for market data manage
 - **Example**:
 ```python
 kline = KlineData(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     open_time=datetime.now(timezone.utc),
     close_time=datetime.now(timezone.utc) + timedelta(minutes=1),
     open=Decimal("50000"),
@@ -43,7 +43,7 @@ kline = KlineData(
 - **Example**:
 ```python
 trade = TradeData(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     trade_id="12345",
     price=Decimal("50000"),
     quantity=Decimal("0.1"),
@@ -59,7 +59,7 @@ trade = TradeData(
 - **Example**:
 ```python
 ticker = TickerData(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     price_change=Decimal("500"),
     price_change_percent=Decimal("1.0"),
     last_price=Decimal("50500"),
@@ -79,7 +79,7 @@ raw_klines = [
     [1609459200000, "50000.0", "50100.0", "49900.0", "50050.0", "10.5", ...]
 ]
 klines = klines_from_binance(raw_klines)
-# Returns: [KlineData(symbol="BTCUSDT", open=50000, ...)]
+# Returns: [KlineData(symbol="BTCUSDC", open=50000, ...)]
 ```
 
 #### `trades_from_binance(raw_data)`
@@ -139,7 +139,7 @@ loader = DataLoader(cache_config)
 - **Example**:
 ```python
 klines = await loader.load_klines(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     interval=TimeFrame.H1,
     start_time=datetime.now() - timedelta(days=7),
     limit=168  # 7 days of hourly data
@@ -154,7 +154,7 @@ klines = await loader.load_klines(
 - **Example**:
 ```python
 trades = await loader.load_trades(
-    symbol="BTCUSDT",
+    symbol="BTCUSDC",
     start_time=datetime.now() - timedelta(hours=1),
     limit=500
 )
@@ -167,7 +167,7 @@ trades = await loader.load_trades(
 - **What for**: Liquidity analysis and optimal order sizing
 - **Example**:
 ```python
-depth = await loader.load_depth("BTCUSDT", limit=20)
+depth = await loader.load_depth("BTCUSDC", limit=20)
 # Returns: DepthData with top 20 bid/ask levels
 ```
 
@@ -179,7 +179,7 @@ depth = await loader.load_depth("BTCUSDT", limit=20)
 ```python
 await loader.cache_data(
     data=klines_list,
-    cache_key="BTCUSDT_1h_20241201",
+    cache_key="BTCUSDC_1h_20241201",
     ttl_hours=6
 )
 # Caches data for 6 hours
@@ -191,7 +191,7 @@ await loader.cache_data(
 - **What for**: Performance optimization and reduced API usage
 - **Example**:
 ```python
-cached_klines = await loader.get_cached_data("BTCUSDT_1h_20241201")
+cached_klines = await loader.get_cached_data("BTCUSDC_1h_20241201")
 # Returns: List[KlineData] or None if not cached/expired
 ```
 
@@ -232,7 +232,7 @@ is_valid, errors = DataValidator.validate_trades(trades_list)
 - **Example**:
 ```python
 cache = ParquetCache()
-cache.save(klines_list, "cache/BTCUSDT_2024_01.parquet")
+cache.save(klines_list, "cache/BTCUSDC_2024_01.parquet")
 # Saves data in compressed Parquet format
 ```
 
@@ -242,7 +242,7 @@ cache.save(klines_list, "cache/BTCUSDT_2024_01.parquet")
 - **What for**: Efficient data retrieval from cache
 - **Example**:
 ```python
-klines = cache.load("cache/BTCUSDT_2024_01.parquet")
+klines = cache.load("cache/BTCUSDC_2024_01.parquet")
 # Returns: List[KlineData] loaded from Parquet file
 ```
 

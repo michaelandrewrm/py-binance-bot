@@ -488,8 +488,8 @@ class PaperBroker:
     def _parse_symbol(self, symbol: str) -> Tuple[str, str]:
         """Parse trading symbol into base and quote assets"""
         # This is a simplified parser - in reality you'd use exchange info
-        if symbol.endswith("USDT"):
-            return symbol[:-4], "USDT"
+        if symbol.endswith("USDC"):
+            return symbol[:-4], "USDC"
         elif symbol.endswith("BTC"):
             return symbol[:-3], "BTC"
         elif symbol.endswith("ETH"):
@@ -509,9 +509,9 @@ class PaperBroker:
                 }
                 for balance in self.balances.values()
             ],
-            "total_wallet_balance": str(sum(b.total for b in self.balances.values() if b.asset == "USDT")),
+            "total_wallet_balance": str(sum(b.total for b in self.balances.values() if b.asset == "USDC")),
             "total_unrealized_profit": str(sum(p.unrealized_pnl for p in self.positions.values())),
-            "total_margin_balance": str(sum(b.total for b in self.balances.values() if b.asset == "USDT"))
+            "total_margin_balance": str(sum(b.total for b in self.balances.values() if b.asset == "USDC"))
         }
     
     def get_position_info(self, symbol: str = None) -> List[Dict]:

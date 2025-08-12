@@ -308,8 +308,8 @@ class BacktestEngine:
         
         # Create paper broker
         initial_balances = {
-            "USDT": self.config.initial_capital,
-            self.config.symbol.replace("USDT", ""): Decimal('0')
+            "USDC": self.config.initial_capital,
+            self.config.symbol.replace("USDC", ""): Decimal('0')
         }
         
         self.broker = PaperBroker(
@@ -520,7 +520,7 @@ class BacktestEngine:
                 quantity=Decimal(str(trade["quantity"])),
                 price=Decimal(str(trade["price"])),
                 fee=Decimal(str(trade["fee"])),
-                fee_asset="USDT",
+                fee_asset="USDC",
                 timestamp=trade["timestamp"],
                 order_id=trade["order_id"],
                 client_order_id="",
@@ -532,7 +532,7 @@ class BacktestEngine:
         final_balance = sum(
             Decimal(balance["free"]) + Decimal(balance["locked"])
             for balance in account_info["balances"]
-            if balance["asset"] == "USDT"
+            if balance["asset"] == "USDC"
         )
         
         total_return = (final_balance - self.config.initial_capital) / self.config.initial_capital
