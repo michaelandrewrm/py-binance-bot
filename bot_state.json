@@ -1,0 +1,32 @@
+{
+  "status": "stopping",
+  "symbol": "BTCUSDC",
+  "start_time": "2025-08-12T09:53:48.140025Z",
+  "last_update": "2025-08-12T09:53:48.140032Z",
+  "positions": {},
+  "active_orders": {},
+  "order_history": [],
+  "balances": {},
+  "grid_state": null,
+  "metrics": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "total_pnl": "0",
+    "realized_pnl": "0",
+    "unrealized_pnl": "0",
+    "fees_paid": "0",
+    "max_drawdown": "0",
+    "sharpe_ratio": null,
+    "win_rate": null,
+    "profit_factor": null,
+    "last_updated": "2025-08-12T09:53:48.140038Z"
+  },
+  "config": {},
+  "error_count": 0,
+  "last_error": null,
+  "error_timestamp": null,
+  "requires_manual_resume": false,
+  "flatten_reason": null,
+  "flatten_timestamp": null
+}

@@ -34,7 +34,7 @@ default:
   
   # Trading strategy configuration
   trading:
-    default_symbol: "BTCUSDT"
+    default_symbol: "BTCUSDC"
     default_timeframe: "5m"
     max_position_size: 1000.0
     risk_percentage: 0.02
