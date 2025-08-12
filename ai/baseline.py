@@ -5,12 +5,13 @@ This module implements baseline trading strategies using traditional
 technical indicators like ATR and volatility bands.
 """
 
+import numpy as np
+
 from typing import List, Dict, Optional, Tuple
 from decimal import Decimal
 from datetime import datetime, timezone
-import numpy as np
+from data.schema import KlineData, FeatureData, ModelPrediction
 
-from ..data.schema import KlineData, FeatureData, ModelPrediction
 
 class TechnicalIndicators:
     """Collection of technical indicators for baseline strategies"""
