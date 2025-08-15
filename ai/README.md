@@ -1,303 +1,466 @@
 # AI Directory
 
-## File Overview
+## Purpose
 
-This directory contains artificial intelligence and machine learning modules for trading strategy optimization and analysis.
+The AI directory provides sophisticated machine learning and algorithmic trading capabilities, including baseline trading strategies, Bayesian optimization for parameter tuning, and comprehensive validation frameworks. This layer enables intelligent trading decisions and automated strategy optimization.
 
-### Python Files
+## Architecture
 
-#### `baseline.py`
-- **Purpose**: Baseline trading strategies using traditional technical indicators
-- **Functionality**: Implements ATR/volatility bands, moving averages, and other technical analysis tools
+The AI layer provides:
+- **Baseline Trading Strategies**: Technical analysis-based trading algorithms with configurable parameters
+- **Bayesian Optimization**: Advanced parameter optimization using Gaussian processes and acquisition functions
+- **Strategy Validation**: Comprehensive validation framework with statistical testing and cross-validation
+- **Machine Learning Integration**: Support for custom ML models and feature engineering
+- **Performance Analytics**: AI-driven performance analysis and strategy comparison
 
-#### `bo_suggester.py`
-- **Purpose**: Bayesian optimization for strategy hyperparameter tuning
-- **Functionality**: Optimizes trading strategy parameters using Bayesian optimization over simulation results
+## Files Overview
 
-#### `validation.py`
-- **Purpose**: Strategy validation using walk-forward analysis and rolling cross-validation
-- **Functionality**: Prevents overfitting and validates strategy robustness using time-series cross-validation
+### Core AI Components
 
-## Function Documentation
+#### `baseline.py` - Technical Analysis Trading Strategies (628 lines)
+- **Technical Indicators**: Comprehensive technical analysis indicators (RSI, MACD, Bollinger Bands, SMA/EMA)
+- **Trading Signals**: Multi-timeframe signal generation with confidence scoring
+- **Strategy Framework**: Configurable trading strategies with parameter optimization
+- **Risk Management**: Built-in risk controls and position sizing algorithms
+- **Performance Tracking**: Real-time strategy performance monitoring and analytics
 
-### baseline.py
+#### `bo_suggester.py` - Bayesian Optimization Engine (389 lines)
+- **Gaussian Process Models**: Advanced probabilistic models for parameter space exploration
+- **Acquisition Functions**: Multiple acquisition strategies (EI, UCB, PI) for optimal exploration
+- **Hyperparameter Optimization**: Automated optimization of trading strategy parameters
+- **Multi-objective Optimization**: Support for optimizing multiple conflicting objectives
+- **Convergence Analysis**: Optimization progress tracking and convergence detection
 
-#### `TechnicalIndicators.sma(prices, period)`
-- **What**: Calculates Simple Moving Average over specified period
-- **Why**: Provides trend identification and smoothing for price analysis
-- **What for**: Trend following strategies and signal generation
-- **Example**:
+#### `validation.py` - Strategy Validation Framework (134 lines)
+- **Cross-Validation**: Time series cross-validation for strategy robustness testing
+- **Statistical Testing**: Hypothesis testing and significance analysis for strategy performance
+- **Overfitting Detection**: Methods to detect and prevent strategy overfitting
+- **Walk-Forward Analysis**: Forward-looking validation with expanding/rolling windows
+- **Performance Metrics**: Comprehensive validation metrics and statistical measures
+
+## Key Functions and Classes
+
+### Baseline Trading Strategies
+
+#### Technical Indicator Framework
+**`TechnicalAnalysis.__init__()`**
+- **Purpose**: Initialize technical analysis framework with indicator calculations
+- **Features**: Configurable indicators, multi-timeframe support, data validation
+- **Indicators**: RSI, MACD, Bollinger Bands, SMA, EMA, Stochastic, Williams %R
+- **Usage**: Foundation for all technical analysis-based trading strategies
+
+**`TechnicalAnalysis.calculate_rsi(prices: List[float], period: int = 14) -> List[float]`**
+- **Purpose**: Calculate Relative Strength Index for momentum analysis
+- **Parameters**: Price series, RSI period (default 14)
+- **Returns**: RSI values ranging from 0 to 100
+- **Features**: Smoothed calculation, configurable period, overbought/oversold detection
+- **Usage**: Momentum analysis and reversal signal generation
+
+**`TechnicalAnalysis.calculate_macd(prices: List[float], fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[List[float], List[float], List[float]]`**
+- **Purpose**: Calculate MACD (Moving Average Convergence Divergence) indicator
+- **Parameters**: Price series, fast EMA period, slow EMA period, signal line period
+- **Returns**: Tuple of (MACD line, Signal line, Histogram)
+- **Features**: Configurable periods, trend following, momentum analysis
+- **Usage**: Trend identification and momentum change detection
+
+**`TechnicalAnalysis.calculate_bollinger_bands(prices: List[float], period: int = 20, std_dev: float = 2.0) -> Tuple[List[float], List[float], List[float]]`**
+- **Purpose**: Calculate Bollinger Bands for volatility and mean reversion analysis
+- **Parameters**: Price series, moving average period, standard deviation multiplier
+- **Returns**: Tuple of (Upper band, Middle band/SMA, Lower band)
+- **Features**: Adaptive volatility bands, mean reversion signals, breakout detection
+- **Usage**: Volatility analysis and mean reversion strategy signals
+
+#### Trading Strategy Implementation
+**`BaselineStrategy.__init__(config: Dict)`**
+- **Purpose**: Initialize baseline trading strategy with configuration parameters
+- **Parameters**: Strategy configuration dictionary with parameters and risk settings
+- **Features**: Parameter validation, risk management setup, performance tracking
+- **Usage**: Base class for all technical analysis-based trading strategies
+
+**`BaselineStrategy.generate_signals(market_data: MarketData) -> List[TradingSignal]`**
+- **Purpose**: Generate trading signals based on technical analysis
+- **Parameters**: Current market data including OHLCV and indicators
+- **Returns**: List of trading signals with confidence scores and metadata
+- **Features**: Multi-indicator consensus, signal filtering, confidence weighting
+- **Usage**: Primary signal generation for automated trading
+
+**`BaselineStrategy.calculate_position_size(signal: TradingSignal, portfolio: Portfolio) -> Decimal`**
+- **Purpose**: Calculate optimal position size based on signal strength and risk management
+- **Parameters**: Trading signal with confidence, current portfolio state
+- **Returns**: Position size as decimal amount
+- **Features**: Kelly criterion, fixed fractional, volatility-based sizing
+- **Usage**: Risk-adjusted position sizing for trade execution
+
+#### Strategy Variants
+**`MomentumStrategy.execute_strategy(data: MarketData) -> StrategyResult`**
+- **Purpose**: Execute momentum-based trading strategy
+- **Parameters**: Market data with price and volume information
+- **Returns**: Strategy execution result with trades and performance metrics
+- **Features**: Trend following, momentum confirmation, breakout trading
+- **Usage**: Trend-following strategies in trending markets
+
+**`MeanReversionStrategy.execute_strategy(data: MarketData) -> StrategyResult`**
+- **Purpose**: Execute mean reversion trading strategy
+- **Parameters**: Market data with statistical analysis
+- **Returns**: Strategy execution result with reversal trades
+- **Features**: Statistical mean reversion, oversold/overbought conditions
+- **Usage**: Contrarian strategies in ranging markets
+
+**`GridTradingStrategy.execute_strategy(data: MarketData) -> StrategyResult`**
+- **Purpose**: Execute grid trading strategy with dynamic grid adjustment
+- **Parameters**: Market data for grid level calculation
+- **Returns**: Strategy execution result with grid-based trades
+- **Features**: Dynamic grid sizing, profit taking, loss management
+- **Usage**: Market-making strategies in sideways markets
+
+### Bayesian Optimization System
+
+#### Gaussian Process Modeling
+**`BayesianOptimizer.__init__(objective_function: Callable, parameter_space: Dict, acquisition_function: str = "ei")`**
+- **Purpose**: Initialize Bayesian optimization for strategy parameter tuning
+- **Parameters**: Objective function to optimize, parameter search space, acquisition function type
+- **Features**: Gaussian process regression, uncertainty quantification, exploration/exploitation balance
+- **Usage**: Automated hyperparameter optimization for trading strategies
+
+**`BayesianOptimizer.suggest_parameters() -> Dict[str, float]`**
+- **Purpose**: Suggest next parameter configuration to evaluate
+- **Returns**: Dictionary of parameter names and suggested values
+- **Features**: Acquisition function optimization, uncertainty-aware suggestions
+- **Usage**: Iterative parameter optimization process
+
+**`BayesianOptimizer.update_model(parameters: Dict, performance: float) -> None`**
+- **Purpose**: Update Gaussian process model with new evaluation result
+- **Parameters**: Parameter configuration used, observed performance metric
+- **Features**: Online learning, model uncertainty updates, convergence tracking
+- **Usage**: Continuous model improvement during optimization
+
+#### Acquisition Functions
+**`BayesianOptimizer.expected_improvement(x: np.ndarray) -> float`**
+- **Purpose**: Calculate Expected Improvement acquisition function
+- **Parameters**: Parameter vector to evaluate
+- **Returns**: Expected improvement value for exploration prioritization
+- **Features**: Exploitation of promising regions, exploration of uncertain areas
+- **Usage**: Balanced exploration-exploitation in parameter optimization
+
+**`BayesianOptimizer.upper_confidence_bound(x: np.ndarray, kappa: float = 2.576) -> float`**
+- **Purpose**: Calculate Upper Confidence Bound acquisition function
+- **Parameters**: Parameter vector, exploration parameter kappa
+- **Returns**: UCB value for optimistic parameter selection
+- **Features**: Confidence interval-based exploration, tunable exploration level
+- **Usage**: Optimistic parameter exploration with uncertainty quantification
+
+**`BayesianOptimizer.probability_of_improvement(x: np.ndarray) -> float`**
+- **Purpose**: Calculate Probability of Improvement acquisition function
+- **Parameters**: Parameter vector to evaluate
+- **Returns**: Probability of improvement over current best
+- **Features**: Conservative exploration, improvement probability assessment
+- **Usage**: Risk-averse parameter optimization
+
+#### Multi-objective Optimization
+**`MultiObjectiveOptimizer.optimize(objectives: List[str], weights: List[float]) -> OptimizationResult`**
+- **Purpose**: Optimize multiple conflicting objectives simultaneously
+- **Parameters**: List of objective names, importance weights for each objective
+- **Returns**: Pareto-optimal solutions with trade-off analysis
+- **Features**: Pareto frontier calculation, weighted objective combination
+- **Usage**: Balancing return, risk, and other strategy objectives
+
+**`MultiObjectiveOptimizer.pareto_frontier_analysis() -> ParetoAnalysis`**
+- **Purpose**: Analyze Pareto frontier of multi-objective optimization
+- **Returns**: Analysis of trade-offs between competing objectives
+- **Features**: Domination analysis, efficient frontier identification
+- **Usage**: Understanding objective trade-offs and solution selection
+
+### Strategy Validation Framework
+
+#### Cross-Validation Methods
+**`StrategyValidator.__init__(validation_config: Dict)`**
+- **Purpose**: Initialize validation framework with configuration
+- **Parameters**: Validation configuration with methods and parameters
+- **Features**: Multiple validation methods, statistical testing, robustness analysis
+- **Usage**: Comprehensive strategy validation before deployment
+
+**`StrategyValidator.time_series_cross_validation(strategy: Strategy, data: MarketData, folds: int = 5) -> ValidationResult`**
+- **Purpose**: Perform time series cross-validation for strategy robustness
+- **Parameters**: Strategy to validate, historical market data, number of folds
+- **Returns**: Validation results with performance statistics across folds
+- **Features**: Temporal order preservation, expanding/rolling windows, statistical analysis
+- **Usage**: Robust strategy performance estimation and overfitting detection
+
+**`StrategyValidator.walk_forward_analysis(strategy: Strategy, data: MarketData, train_period: int, test_period: int) -> WalkForwardResult`**
+- **Purpose**: Perform walk-forward analysis for out-of-sample validation
+- **Parameters**: Strategy, data, training period length, testing period length
+- **Returns**: Walk-forward analysis results with performance evolution
+- **Features**: Forward-looking validation, parameter stability analysis
+- **Usage**: Real-world performance estimation and strategy degradation detection
+
+#### Statistical Testing
+**`StrategyValidator.statistical_significance_test(results_a: ValidationResult, results_b: ValidationResult) -> StatisticalTest`**
+- **Purpose**: Test statistical significance between two strategy performances
+- **Parameters**: Validation results for two strategies
+- **Returns**: Statistical test results with p-values and confidence intervals
+- **Features**: Multiple statistical tests, effect size calculation, power analysis
+- **Usage**: Strategy comparison and selection validation
+
+**`StrategyValidator.overfitting_detection(in_sample_results: ValidationResult, out_sample_results: ValidationResult) -> OverfittingAnalysis`**
+- **Purpose**: Detect potential overfitting in strategy development
+- **Parameters**: In-sample and out-of-sample validation results
+- **Returns**: Overfitting analysis with severity assessment
+- **Features**: Performance degradation analysis, complexity penalties
+- **Usage**: Strategy robustness assessment and model selection
+
+**`StrategyValidator.bootstrap_confidence_intervals(performance_series: List[float], confidence: float = 0.95) -> ConfidenceInterval`**
+- **Purpose**: Calculate bootstrap confidence intervals for performance metrics
+- **Parameters**: Performance time series, confidence level
+- **Returns**: Confidence intervals for robust performance estimation
+- **Features**: Non-parametric bootstrap, bias correction, multiple metrics
+- **Usage**: Performance uncertainty quantification and risk assessment
+
+## Integration Points
+
+### With Core System
+- **core/executor.py**: Strategy signal execution and trade management
+- **core/safety.py**: AI-driven risk management and position sizing
+- **core/state.py**: Strategy state persistence and recovery
+
+### With Data Layer
+- **data/loader.py**: Market data retrieval for technical analysis and model training
+- **data/schema.py**: Data structures for signals, strategies, and optimization results
+
+### With Storage Layer
+- **storage/repo.py**: Strategy performance tracking and historical analysis
+- **storage/artifacts.py**: Model storage, optimization results, and validation metrics
+
+### With Simulation Layer
+- **sim/engine.py**: Strategy backtesting and performance evaluation
+- **sim/evaluation.py**: Validation integration with simulation framework
+
+## Usage Examples
+
+### Technical Analysis Strategy Implementation
 ```python
-prices = [Decimal("50000"), Decimal("50100"), Decimal("49900"), Decimal("50200")]
-sma_values = TechnicalIndicators.sma(prices, period=3)
-# Returns: [None, None, Decimal("50000"), Decimal("50067")]
-```
+# Initialize technical analysis framework
+ta = TechnicalAnalysis()
 
-#### `TechnicalIndicators.ema(prices, period, alpha=None)`
-- **What**: Calculates Exponential Moving Average with configurable smoothing factor
-- **Why**: Provides more responsive trend following compared to SMA
-- **What for**: Responsive trend detection and signal generation
-- **Example**:
-```python
-prices = [Decimal("100"), Decimal("102"), Decimal("101"), Decimal("103")]
-ema_values = TechnicalIndicators.ema(prices, period=3)
-# Returns: [100, 101, 101, 102] (more responsive to recent prices)
-```
+# Calculate technical indicators
+prices = [100, 102, 101, 103, 105, 104, 106, 108]
+rsi = ta.calculate_rsi(prices, period=14)
+macd_line, signal_line, histogram = ta.calculate_macd(prices)
+upper_bb, middle_bb, lower_bb = ta.calculate_bollinger_bands(prices)
 
-#### `TechnicalIndicators.atr(highs, lows, closes, period=14)`
-- **What**: Calculates Average True Range for volatility measurement
-- **Why**: Measures market volatility for position sizing and stop-loss placement
-- **What for**: Volatility-based position sizing and risk management
-- **Example**:
-```python
-highs = [Decimal("50100"), Decimal("50200"), Decimal("50150")]
-lows = [Decimal("49900"), Decimal("49950"), Decimal("49800")]
-closes = [Decimal("50000"), Decimal("50100"), Decimal("50000")]
-atr_values = TechnicalIndicators.atr(highs, lows, closes, period=2)
-# Returns: [None, Decimal("175"), Decimal("162.5")]
-```
-
-#### `TechnicalIndicators.bollinger_bands(prices, period=20, std_dev=2)`
-- **What**: Calculates Bollinger Bands for volatility-based trading ranges
-- **Why**: Identifies overbought/oversold conditions and volatility changes
-- **What for**: Mean reversion strategies and volatility breakout detection
-- **Example**:
-```python
-prices = [Decimal("50000")] * 20 + [Decimal("50500"), Decimal("49500")]
-upper, middle, lower = TechnicalIndicators.bollinger_bands(prices, period=20)
-# Returns: (upper_band, sma, lower_band) arrays
-```
-
-#### `TechnicalIndicators.rsi(prices, period=14)`
-- **What**: Calculates Relative Strength Index for momentum analysis
-- **Why**: Identifies overbought/oversold conditions in price momentum
-- **What for**: Mean reversion and momentum strategies
-- **Example**:
-```python
-prices = [Decimal("50000"), Decimal("50100"), Decimal("50200"), Decimal("50150")]
-rsi_values = TechnicalIndicators.rsi(prices, period=3)
-# Returns: [None, None, Decimal("100"), Decimal("66.67")]
-```
-
-#### `BaselineStrategy.__init__(config)`
-- **What**: Initializes baseline strategy with technical indicator configuration
-- **Why**: Provides a simple, robust trading strategy for comparison
-- **What for**: Baseline performance comparison and fallback strategy
-- **Example**:
-```python
-config = {
-    "atr_period": 14,
-    "atr_multiplier": 2.0,
-    "sma_period": 20,
-    "position_size": Decimal("100")
+# Create baseline strategy
+strategy_config = {
+    "rsi_period": 14,
+    "rsi_oversold": 30,
+    "rsi_overbought": 70,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "position_sizing": "kelly",
+    "max_position_size": 0.1
 }
-strategy = BaselineStrategy(config)
-```
 
-#### `generate_signals(klines)`
-- **What**: Generates buy/sell signals based on technical indicators
-- **Why**: Provides systematic trading decisions based on market analysis
-- **What for**: Automated trading signal generation
-- **Example**:
-```python
-signals = strategy.generate_signals(klines_data)
-# Returns: [{'timestamp': dt, 'signal': 'BUY', 'price': 50000, 'confidence': 0.8}]
-```
+strategy = BaselineStrategy(strategy_config)
 
-#### `calculate_position_size(current_price, atr_value, risk_amount)`
-- **What**: Calculates position size based on volatility and risk tolerance
-- **Why**: Ensures consistent risk management across different market conditions
-- **What for**: Risk-adjusted position sizing in volatile markets
-- **Example**:
-```python
-position_size = strategy.calculate_position_size(
-    current_price=Decimal("50000"),
-    atr_value=Decimal("500"),
-    risk_amount=Decimal("100")
+# Generate trading signals
+market_data = MarketData(
+    symbol="BTCUSDC",
+    prices=prices,
+    volumes=[1000, 1200, 800, 1500, 2000, 1100, 1800, 2200],
+    timestamp=datetime.now()
 )
-# Returns: Decimal("0.004") (position size in base currency)
+
+signals = strategy.generate_signals(market_data)
+for signal in signals:
+    print(f"Signal: {signal.action} - Confidence: {signal.confidence:.2f}")
 ```
 
-### bo_suggester.py
-
-#### `BayesianOptimizer.__init__(hyperparameters, objective_function, n_initial_points=10)`
-- **What**: Initializes Bayesian optimizer with parameter space and objective function
-- **Why**: Enables efficient hyperparameter optimization using probabilistic models
-- **What for**: Strategy optimization and parameter tuning
-- **Example**:
+### Bayesian Optimization for Strategy Tuning
 ```python
-hyperparams = [
-    HyperParameter("grid_spacing", "float", bounds=(50, 500)),
-    HyperParameter("num_grids", "int", bounds=(10, 50)),
-    HyperParameter("risk_limit", "float", bounds=(0.01, 0.05))
-]
-optimizer = BayesianOptimizer(hyperparams, objective_function)
-```
+# Define objective function for optimization
+def strategy_objective(params):
+    # Configure strategy with parameters
+    strategy = BaselineStrategy({
+        "rsi_period": int(params["rsi_period"]),
+        "rsi_oversold": params["rsi_oversold"],
+        "rsi_overbought": params["rsi_overbought"],
+        "position_size": params["position_size"]
+    })
+    
+    # Backtest strategy
+    result = backtest_strategy(strategy, historical_data)
+    
+    # Return negative Sharpe ratio (for minimization)
+    return -result.sharpe_ratio
 
-#### `optimize(n_trials=50, progress_callback=None)`
-- **What**: Runs Bayesian optimization to find optimal hyperparameters
-- **Why**: Finds optimal parameters more efficiently than grid search
-- **What for**: Strategy optimization and performance improvement
-- **Example**:
-```python
-def objective(params):
-    # Run backtest with parameters
-    result = run_backtest(params)
-    return result.sharpe_ratio
+# Define parameter space
+parameter_space = {
+    "rsi_period": {"type": "int", "bounds": [10, 20]},
+    "rsi_oversold": {"type": "float", "bounds": [20, 40]},
+    "rsi_overbought": {"type": "float", "bounds": [60, 80]},
+    "position_size": {"type": "float", "bounds": [0.01, 0.1]}
+}
 
-best_result = await optimizer.optimize(n_trials=100)
-# Returns: OptimizationResult with best parameters and performance
-```
-
-#### `suggest_next_parameters()`
-- **What**: Suggests next parameter combination to evaluate using acquisition function
-- **Why**: Balances exploration and exploitation in parameter space
-- **What for**: Efficient parameter space exploration
-- **Example**:
-```python
-next_params = optimizer.suggest_next_parameters()
-# Returns: {'grid_spacing': 125.5, 'num_grids': 25, 'risk_limit': 0.023}
-```
-
-#### `update_with_result(parameters, objective_value, metrics)`
-- **What**: Updates optimizer with new trial results
-- **Why**: Improves model understanding of parameter space
-- **What for**: Continuous learning and optimization refinement
-- **Example**:
-```python
-optimizer.update_with_result(
-    parameters={"grid_spacing": 100, "num_grids": 20},
-    objective_value=1.45,
-    metrics={"return": 0.25, "drawdown": 0.08}
+# Initialize Bayesian optimizer
+optimizer = BayesianOptimizer(
+    objective_function=strategy_objective,
+    parameter_space=parameter_space,
+    acquisition_function="ei"
 )
+
+# Optimization loop
+best_performance = float('inf')
+best_params = None
+
+for iteration in range(50):
+    # Get suggested parameters
+    suggested_params = optimizer.suggest_parameters()
+    
+    # Evaluate performance
+    performance = strategy_objective(suggested_params)
+    
+    # Update model
+    optimizer.update_model(suggested_params, performance)
+    
+    # Track best result
+    if performance < best_performance:
+        best_performance = performance
+        best_params = suggested_params
+        
+    print(f"Iteration {iteration}: Performance = {-performance:.4f}")
+
+print(f"Best Sharpe ratio: {-best_performance:.4f}")
+print(f"Best parameters: {best_params}")
 ```
 
-#### `get_optimization_history()`
-- **What**: Retrieves complete optimization history and convergence data
-- **Why**: Provides visibility into optimization process and convergence
-- **What for**: Optimization analysis and debugging
-- **Example**:
+### Strategy Validation Workflow
 ```python
-history = optimizer.get_optimization_history()
-# Returns: List[OptimizationResult] with all trials and their results
-```
+# Initialize validator
+validator = StrategyValidator({
+    "validation_method": "time_series_cv",
+    "n_folds": 5,
+    "test_size": 0.2,
+    "statistical_tests": ["t_test", "mann_whitney"]
+})
 
-#### `plot_convergence()`
-- **What**: Generates convergence plot showing optimization progress
-- **Why**: Visualizes optimization effectiveness and convergence behavior
-- **What for**: Optimization analysis and presentation
-- **Example**:
-```python
-fig = optimizer.plot_convergence()
-# Returns: Matplotlib figure showing objective value over trials
-```
-
-### validation.py
-
-#### `WalkForwardValidator.__init__(train_window_days=252, test_window_days=63, step_days=21)`
-- **What**: Initializes walk-forward validation with time window configuration
-- **Why**: Prevents data leakage and validates strategy robustness over time
-- **What for**: Realistic strategy validation and overfitting detection
-- **Example**:
-```python
-validator = WalkForwardValidator(
-    train_window_days=252,  # 1 year training
-    test_window_days=63,    # 3 months testing
-    step_days=21           # Monthly steps
-)
-```
-
-#### `create_validation_periods(start_date, end_date)`
-- **What**: Creates non-overlapping train/test periods for walk-forward analysis
-- **Why**: Ensures proper temporal validation without future information
-- **What for**: Time-series cross-validation setup
-- **Example**:
-```python
-periods = validator.create_validation_periods(
-    start_date=datetime(2023, 1, 1),
-    end_date=datetime(2024, 12, 31)
-)
-# Returns: [ValidationPeriod(train_start=..., test_start=...), ...]
-```
-
-#### `validate_strategy(strategy, data, optimization_function=None)`
-- **What**: Runs complete walk-forward validation on a trading strategy
-- **Why**: Provides realistic assessment of strategy performance
-- **What for**: Strategy validation and robustness testing
-- **Example**:
-```python
-def optimize_params(train_data):
-    # Optimize parameters on training data
-    return optimized_parameters
-
-results = await validator.validate_strategy(
-    strategy=my_strategy,
+# Perform time series cross-validation
+cv_results = validator.time_series_cross_validation(
+    strategy=optimized_strategy,
     data=historical_data,
-    optimization_function=optimize_params
+    folds=5
 )
-# Returns: List[ValidationResult] for each validation period
-```
 
-#### `calculate_overfitting_score(train_metrics, test_metrics)`
-- **What**: Calculates overfitting score by comparing train vs test performance
-- **Why**: Quantifies the degree of overfitting in strategy optimization
-- **What for**: Overfitting detection and model selection
-- **Example**:
-```python
-overfitting_score = validator.calculate_overfitting_score(
-    train_metrics=train_performance,
-    test_metrics=test_performance
+print(f"Mean CV Sharpe: {cv_results.mean_sharpe:.4f} ± {cv_results.std_sharpe:.4f}")
+print(f"Mean CV Return: {cv_results.mean_return:.2%} ± {cv_results.std_return:.2%}")
+
+# Walk-forward analysis
+wf_results = validator.walk_forward_analysis(
+    strategy=optimized_strategy,
+    data=historical_data,
+    train_period=252,  # 1 year training
+    test_period=63     # 3 months testing
 )
-# Returns: 0.15 (15% performance degradation from train to test)
-```
 
-#### `RollingValidator.rolling_validate(strategy, data, window_size, step_size)`
-- **What**: Performs rolling window validation with overlapping periods
-- **Why**: Provides more validation samples for statistical significance
-- **What for**: Robust strategy validation with multiple test periods
-- **Example**:
-```python
-rolling_validator = RollingValidator()
-results = rolling_validator.rolling_validate(
-    strategy=strategy,
-    data=data,
-    window_size=timedelta(days=180),
-    step_size=timedelta(days=30)
+print(f"Walk-forward periods: {len(wf_results.periods)}")
+print(f"Average out-of-sample Sharpe: {wf_results.avg_oos_sharpe:.4f}")
+
+# Overfitting detection
+overfitting_analysis = validator.overfitting_detection(
+    in_sample_results=optimization_results,
+    out_sample_results=wf_results
 )
-# Returns: Multiple validation results from overlapping windows
+
+if overfitting_analysis.is_overfit:
+    print(f"Warning: Potential overfitting detected!")
+    print(f"Performance degradation: {overfitting_analysis.degradation:.2%}")
 ```
 
-#### `generate_validation_report(validation_results)`
-- **What**: Generates comprehensive validation report with statistics
-- **Why**: Provides summary analysis of validation results
-- **What for**: Strategy assessment and decision making
-- **Example**:
+### Multi-objective Strategy Optimization
 ```python
-report = validator.generate_validation_report(validation_results)
-# Returns: {'avg_test_sharpe': 1.25, 'consistency_score': 0.82, ...}
-```
+# Define multiple objectives
+def multi_objective_function(params):
+    strategy = BaselineStrategy(params)
+    result = backtest_strategy(strategy, historical_data)
+    
+    return {
+        "return": -result.total_return,      # Maximize return (minimize negative)
+        "risk": result.max_drawdown,         # Minimize risk
+        "trades": -result.num_trades         # Maximize trade frequency
+    }
 
-#### `CrossValidator.cross_validate(strategy, data, k_folds=5)`
-- **What**: Performs k-fold cross-validation adapted for time series
-- **Why**: Provides robust validation while respecting temporal order
-- **What for**: Model validation and parameter selection
-- **Example**:
-```python
-cv = CrossValidator()
-cv_results = cv.cross_validate(
-    strategy=strategy,
-    data=data,
-    k_folds=5
+# Multi-objective optimizer
+mo_optimizer = MultiObjectiveOptimizer(
+    objective_function=multi_objective_function,
+    parameter_space=parameter_space
 )
-# Returns: Cross-validation results with performance metrics
+
+# Optimize with different objective weights
+weight_combinations = [
+    {"return": 0.6, "risk": 0.3, "trades": 0.1},
+    {"return": 0.4, "risk": 0.5, "trades": 0.1},
+    {"return": 0.5, "risk": 0.2, "trades": 0.3}
+]
+
+pareto_solutions = []
+for weights in weight_combinations:
+    solution = mo_optimizer.optimize(
+        objectives=["return", "risk", "trades"],
+        weights=[weights["return"], weights["risk"], weights["trades"]]
+    )
+    pareto_solutions.append(solution)
+
+# Analyze Pareto frontier
+pareto_analysis = mo_optimizer.pareto_frontier_analysis()
+print(f"Efficient solutions found: {len(pareto_analysis.efficient_points)}")
+
+# Select solution based on preferences
+selected_solution = pareto_analysis.select_solution(
+    risk_tolerance=0.15,  # Max 15% drawdown
+    min_return=0.20       # Min 20% annual return
+)
 ```
 
-#### `calculate_consistency_score(validation_results)`
-- **What**: Calculates strategy consistency across different time periods
-- **Why**: Measures strategy robustness across varying market conditions
-- **What for**: Strategy reliability assessment
-- **Example**:
+### Complete AI-Driven Strategy Development Pipeline
 ```python
-consistency = validator.calculate_consistency_score(validation_results)
-# Returns: 0.85 (85% consistency score across validation periods)
+async def develop_ai_strategy():
+    # 1. Technical Analysis Setup
+    ta = TechnicalAnalysis()
+    
+    # 2. Initial Strategy Configuration
+    base_config = {
+        "indicators": ["rsi", "macd", "bollinger"],
+        "timeframes": ["1h", "4h", "1d"],
+        "risk_management": True
+    }
+    
+    # 3. Bayesian Optimization
+    print("Starting parameter optimization...")
+    optimizer = BayesianOptimizer(strategy_objective, parameter_space)
+    
+    optimized_params = await optimizer.optimize(iterations=100)
+    print(f"Optimization complete. Best Sharpe: {optimized_params.best_score:.4f}")
+    
+    # 4. Strategy Validation
+    print("Validating optimized strategy...")
+    validator = StrategyValidator()
+    
+    validation_results = await validator.comprehensive_validation(
+        strategy=optimized_strategy,
+        data=historical_data
+    )
+    
+    # 5. Performance Analysis
+    if validation_results.is_robust:
+        print("Strategy validation passed!")
+        print(f"Expected Sharpe ratio: {validation_results.expected_sharpe:.4f}")
+        print(f"95% confidence interval: [{validation_results.ci_lower:.4f}, {validation_results.ci_upper:.4f}]")
+        
+        # 6. Deploy for paper trading
+        await deploy_strategy_for_testing(optimized_strategy)
+    else:
+        print("Strategy validation failed. Needs further development.")
+        print(f"Issues found: {validation_results.issues}")
+    
+    return optimized_strategy, validation_results
+
+# Run the complete pipeline
+strategy, validation = await develop_ai_strategy()
 ```
