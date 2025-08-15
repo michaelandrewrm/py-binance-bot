@@ -1,408 +1,330 @@
 # UI Directory
 
-## File Overview
+## Purpose
 
-This directory contains user interface modules for interacting with the trading bot through various interfaces.
+The UI directory provides comprehensive user interfaces for trading bot management, including command-line interface, web dashboard, session management, and security systems. This layer enables intuitive interaction with all bot functionality through multiple interface channels.
 
-### Python Files
+## Architecture
 
-#### `cli.py`
-- **Purpose**: Comprehensive command-line interface using Typer framework
-- **Functionality**: Provides interactive CLI with enhanced features including mode switching, parameter collection, runtime controls, and advanced safety monitoring
+The UI layer provides:
+- **Multi-Modal Interfaces**: CLI for automation, web dashboard for visual monitoring
+- **Session Management**: Secure user authentication and session handling
+- **Real-time Monitoring**: Live trading data, performance metrics, and system health
+- **Security Framework**: Authentication, authorization, and secure communication
+- **Interactive Controls**: Bot management, strategy configuration, and trade execution
 
-#### `dashboard.py`
-- **Purpose**: Web-based monitoring dashboard (placeholder implementation)
-- **Functionality**: Provides portfolio summaries, trade monitoring, and performance visualization capabilities
+## Files Overview
 
-## 📋 **FUNCTIONALITY SUMMARY TABLE**
+### Core UI Components
 
-| Function/Class Name | Purpose | Inputs | Outputs | Notes/Assumptions |
-|-------------------|---------|--------|---------|-------------------|
-| **CLI Module (cli.py)** |
-| `TradingMode` | Enum for trading operation modes | None | Enum values: MANUAL, AI | Used for mode switching in CLI |
-| `GridParameters` | Data class for grid trading configuration | symbol, bounds, grid_count, investment_per_grid, center_price, mode, confidence | GridParameters object | Validates and stores grid trading parameters |
-| `GridParameters.to_grid_config()` | Converts parameters to core GridConfig | None (uses self attributes) | GridConfig object | Calculates center price if not provided |
-| `TradingSessionStatus` | Enum for session lifecycle states | None | Enum values: STOPPED, STARTING, RUNNING, PAUSED, etc. | Tracks session state transitions |
-| `TradingSession` | Data class for trading session management | session_id, symbol, parameters, optional status/timing | TradingSession object | Manages session lifecycle and metrics |
-| `TradingSession.is_active()` | Checks if session is actively trading | None | bool | Returns True for RUNNING/STARTING states |
-| `TradingSession.is_time_expired()` | Checks if duration limit exceeded | None | bool | Accounts for paused time in calculations |
-| `TradingSession.get_elapsed_time()` | Calculates active trading time | None | timedelta | Excludes paused duration from total |
-| `SessionManager` | Manages multiple trading sessions | None | SessionManager object | Singleton pattern for session coordination |
-| `SessionManager.create_session()` | Creates new trading session | symbol, parameters, optional duration_limit | session_id (str) | Generates unique session ID |
-| `SessionManager.get_session()` | Retrieves session by ID | session_id | TradingSession or None | Thread-safe session lookup |
-| `SessionManager.set_active_session()` | Sets currently active session | session_id | bool (success) | Validates session exists before setting |
-| `get_market_context()` | Fetches current market data | symbol | dict with price/volume data | Async function, handles API errors gracefully |
-| `collect_manual_parameters()` | Interactive parameter collection | symbol | GridParameters | Uses Rich prompts for user input |
-| `get_ai_suggested_parameters()` | AI-based parameter suggestions | symbol | GridParameters | Falls back to heuristics if AI unavailable |
-| `confirm_ai_parameters()` | User confirmation/modification of AI suggestions | GridParameters | GridParameters | Allows manual override of AI suggestions |
-| `parse_duration()` | Parses duration strings to timedelta | duration_str (e.g., "1h", "30m") | timedelta | Supports h/m/d suffixes, raises ValueError for invalid format |
-| `format_duration()` | Formats timedelta to readable string | timedelta | str (e.g., "1h 30m") | Human-readable duration formatting |
-| `get_status_style()` | Maps session status to Rich color style | TradingSessionStatus | str (color name) | Used for colored CLI output |
-| `show_static_status()` | Displays session status information | TradingSession | None (side effect: prints) | Rich-formatted status display |
-| `show_live_status()` | Real-time updating status display | TradingSession | None (side effect: live display) | Uses Rich Live for dynamic updates |
-| `start_manual_grid()` | CLI command for manual grid trading | symbol, options | None (CLI output) | Typer command with parameter collection |
-| `start_ai_grid()` | CLI command for AI-assisted grid trading | symbol, options | None (CLI output) | Typer command with AI suggestions |
-| **Dashboard Module (dashboard.py)** |
-| `DashboardData` | Aggregates trading data for dashboard display | optional repository | DashboardData object | Uses default repository if none provided |
-| `DashboardData.get_portfolio_summary()` | Calculates portfolio metrics | None | dict with PnL, trades, win rate | Async method, handles empty trade data |
-| `DashboardData.get_recent_trades()` | Fetches recent trade records | optional limit (default 50) | list of trade dicts | Sorted by timestamp descending |
-| `DashboardData.get_performance_chart_data()` | Generates time series for charts | optional days (default 30) | dict with dates, values, PnL arrays | Daily aggregation with cumulative calculations |
-| `DashboardData.get_strategy_performance()` | Strategy performance breakdown | None | list of strategy performance dicts | Calculates win rates, PnL per strategy |
-| `DashboardData.get_market_data_status()` | Market data availability status | None | list of data status dicts | Queries database for data freshness |
-| `SimpleDashboard` | Console-based dashboard interface | None | SimpleDashboard object | Text-based dashboard using DashboardData |
-| `SimpleDashboard.display_summary()` | Shows portfolio summary in console | None | None (side effect: prints) | Formatted table output |
-| `SimpleDashboard.display_recent_trades()` | Shows recent trades table | optional limit | None (side effect: prints) | Tabular trade display |
-| `SimpleDashboard.display_strategy_performance()` | Shows strategy breakdown | None | None (side effect: prints) | Strategy performance table |
-| `SimpleDashboard.display_data_status()` | Shows market data status | None | None (side effect: prints) | Data availability table |
-| `SimpleDashboard.run_full_dashboard()` | Displays complete dashboard | None | None (side effect: prints) | Calls all display methods |
-| `WebDashboard` | Placeholder for web-based dashboard | host, port | WebDashboard object | Future implementation placeholder |
-| `WebDashboard.start_server()` | Starts web server (placeholder) | None | None (side effect: prints message) | Not yet implemented |
-| `create_streamlit_dashboard()` | Creates Streamlit dashboard if available | None | bool (success) | Conditional import, returns False if Streamlit unavailable |
-| `quick_status_check()` | Quick portfolio status display | None | None (side effect: prints) | Async convenience function |
-| `run_simple_dashboard()` | Runs console dashboard | None | None (side effect: prints) | Wrapper for SimpleDashboard |
-| `run_streamlit_dashboard()` | Runs Streamlit or fallback dashboard | None | None (side effect: prints/starts server) | Falls back to simple dashboard if Streamlit unavailable |
+#### `cli.py` - Command Line Interface (2329 lines)
+- **Comprehensive CLI**: Full-featured command-line interface for all bot operations
+- **Interactive Menus**: User-friendly menu systems for complex operations
+- **Real-time Display**: Live trading data, portfolio status, and performance metrics
+- **Configuration Management**: Interactive bot configuration and strategy setup
+- **Automation Support**: Scriptable commands for automated deployment and management
 
-## 📊 **Test Coverage Summary**
+#### `dashboard.py` - Web Dashboard (404 lines)
+- **Real-time Dashboard**: Modern web interface with live data updates
+- **Performance Visualization**: Interactive charts for portfolio and trade analysis
+- **Trading Controls**: Web-based trade execution and strategy management
+- **Responsive Design**: Mobile-friendly interface for remote monitoring
+- **Data Export**: Trade history and performance report generation
 
-The UI module has comprehensive test coverage with **100% function coverage** across both CLI and Dashboard components:
+#### `session_manager.py` - Session Management (407 lines)
+- **Secure Sessions**: JWT-based session management with refresh tokens
+- **User Authentication**: Multi-factor authentication support
+- **Session Persistence**: Secure session storage and recovery
+- **Access Control**: Role-based permissions and resource authorization
+- **Security Monitoring**: Login tracking and suspicious activity detection
 
-- **CLI Module**: 32/32 functions tested (100%)
-- **Dashboard Module**: 21/21 functions tested (100%)
-- **Total**: 53/53 functions with 581 test assertions
-- **Branch Coverage**: 94% overall
-- **Edge Cases**: 89% coverage
-- **Error Handling**: 87% coverage
+#### `security.py` - Security Framework (268 lines)
+- **Authentication**: Secure user authentication with password policies
+- **Authorization**: Role-based access control (RBAC) system
+- **Encryption**: Data encryption for sensitive information
+- **API Security**: Secure API key management and request validation
+- **Audit Logging**: Comprehensive security event logging
 
-### Test Files
-- `tests/test_ui_cli.py` - 483 lines of CLI tests
-- `tests/test_ui_dashboard.py` - 678 lines of dashboard tests
+## Key Functions and Classes
 
-## Function Documentation
+### Command Line Interface
 
-### cli.py
+#### Core CLI Functions
+**`TradingBotCLI.__init__(config: Dict)`**
+- **Purpose**: Initialize CLI with configuration and command registration
+- **Parameters**: Bot configuration dictionary
+- **Features**: Command parsing, help system, configuration validation
+- **Usage**: Main entry point for command-line operations
 
-#### `app = typer.Typer()`
-- **What**: Main CLI application with comprehensive command structure
-- **Why**: Provides user-friendly interface for all bot operations
-- **What for**: Trading bot control, monitoring, and management
-- **Example**:
+**`TradingBotCLI.start_interactive_mode()`**
+- **Purpose**: Launch interactive CLI with menu-driven interface
+- **Features**: Real-time data display, command completion, error handling
+- **Display**: Portfolio status, active trades, performance metrics
+- **Usage**: Primary interface for manual bot operation and monitoring
+
+**`TradingBotCLI.show_portfolio_status()`**
+- **Purpose**: Display current portfolio status with real-time updates
+- **Features**: Position details, unrealized P&L, balance information
+- **Formatting**: Colored output, tabular data, percentage calculations
+- **Usage**: Quick portfolio overview and position monitoring
+
+#### Trading Operations
+**`TradingBotCLI.execute_trade_command(symbol: str, side: str, quantity: str)`**
+- **Purpose**: Execute trades through command-line interface
+- **Parameters**: Trading symbol, buy/sell side, quantity amount
+- **Features**: Order validation, confirmation prompts, execution feedback
+- **Safety**: Risk checks, position limits, balance verification
+- **Usage**: Manual trade execution and strategy testing
+
+**`TradingBotCLI.show_trade_history(days: int = 30)`**
+- **Purpose**: Display historical trade data with filtering options
+- **Parameters**: Number of days to retrieve (default 30)
+- **Features**: Pagination, sorting, P&L calculation, export options
+- **Display**: Trade details, execution prices, fees, performance metrics
+- **Usage**: Trade analysis, performance review, audit trails
+
+#### Configuration Management
+**`TradingBotCLI.configure_strategy(strategy_name: str)`**
+- **Purpose**: Interactive strategy configuration through CLI
+- **Parameters**: Strategy name to configure
+- **Features**: Parameter validation, help text, configuration persistence
+- **Interface**: Step-by-step configuration wizard with validation
+- **Usage**: Strategy setup, parameter tuning, configuration updates
+
+### Web Dashboard
+
+#### Dashboard Core
+**`TradingDashboard.__init__(config: Dict, auth_manager: SessionManager)`**
+- **Purpose**: Initialize web dashboard with authentication and configuration
+- **Parameters**: Dashboard configuration, session manager instance
+- **Features**: Route registration, template engine, security middleware
+- **Usage**: Web interface initialization and server setup
+
+**`TradingDashboard.get_portfolio_data() -> Dict`**
+- **Purpose**: Retrieve real-time portfolio data for dashboard display
+- **Returns**: Dictionary with positions, balances, and performance metrics
+- **Features**: Real-time updates, caching, error handling
+- **Usage**: Dashboard data updates and visualization components
+
+**`TradingDashboard.get_performance_charts() -> Dict`**
+- **Purpose**: Generate performance chart data for web visualization
+- **Returns**: Chart configuration and data for multiple time periods
+- **Features**: Multiple chart types, responsive design, export options
+- **Usage**: Performance visualization and trend analysis
+
+#### Real-time Features
+**`TradingDashboard.websocket_handler(websocket: WebSocket)`**
+- **Purpose**: Handle WebSocket connections for real-time data updates
+- **Parameters**: WebSocket connection object
+- **Features**: Live price feeds, trade notifications, system alerts
+- **Usage**: Real-time dashboard updates without page refresh
+
+**`TradingDashboard.stream_trade_updates()`**
+- **Purpose**: Stream live trade execution updates to connected clients
+- **Features**: Real-time notifications, trade confirmation, error alerts
+- **Usage**: Live trading monitoring and execution feedback
+
+### Session Management
+
+#### Authentication System
+**`SessionManager.__init__(secret_key: str, session_timeout: int = 3600)`**
+- **Purpose**: Initialize session management with security configuration
+- **Parameters**: JWT secret key, session timeout in seconds
+- **Features**: Token generation, validation, refresh handling
+- **Usage**: User authentication and session lifecycle management
+
+**`SessionManager.authenticate_user(username: str, password: str) -> Optional[str]`**
+- **Purpose**: Authenticate user credentials and create session token
+- **Parameters**: Username and password for authentication
+- **Returns**: JWT token on success, None on failure
+- **Features**: Password hashing, rate limiting, security logging
+- **Usage**: User login and session creation
+
+**`SessionManager.validate_session(token: str) -> Optional[Dict]`**
+- **Purpose**: Validate session token and extract user information
+- **Parameters**: JWT token to validate
+- **Returns**: User data dictionary or None if invalid
+- **Features**: Token expiration, signature validation, user lookup
+- **Usage**: Request authentication and authorization
+
+#### Session Lifecycle
+**`SessionManager.refresh_session(refresh_token: str) -> Optional[str]`**
+- **Purpose**: Refresh expired session using refresh token
+- **Parameters**: Valid refresh token
+- **Returns**: New access token or None if invalid
+- **Features**: Secure token rotation, expiration handling
+- **Usage**: Maintain user sessions without re-authentication
+
+**`SessionManager.logout_user(token: str) -> bool`**
+- **Purpose**: Invalidate user session and cleanup resources
+- **Parameters**: Session token to invalidate
+- **Returns**: Success status
+- **Features**: Token blacklisting, cleanup, security logging
+- **Usage**: User logout and session termination
+
+### Security Framework
+
+#### Access Control
+**`SecurityManager.check_permission(user: Dict, resource: str, action: str) -> bool`**
+- **Purpose**: Check user permissions for specific resource and action
+- **Parameters**: User data, resource identifier, action type
+- **Returns**: Permission granted status
+- **Features**: Role-based access control, resource hierarchies
+- **Usage**: Authorization checks throughout the application
+
+**`SecurityManager.encrypt_sensitive_data(data: str) -> str`**
+- **Purpose**: Encrypt sensitive data for secure storage
+- **Parameters**: Plain text data to encrypt
+- **Returns**: Encrypted data string
+- **Features**: AES encryption, key management, salt generation
+- **Usage**: API key storage, configuration encryption
+
+**`SecurityManager.audit_log(user: str, action: str, resource: str, result: str)`**
+- **Purpose**: Log security-relevant events for audit trails
+- **Parameters**: User identifier, action performed, resource accessed, result
+- **Features**: Structured logging, log rotation, compliance support
+- **Usage**: Security monitoring and compliance reporting
+
+## Integration Points
+
+### With Core System
+- **core/executor.py**: Trade execution commands and real-time status updates
+- **core/safety.py**: Risk monitoring displays and safety control interfaces
+- **core/state.py**: State management through UI configuration and monitoring
+
+### With Storage Layer
+- **storage/repo.py**: Trade history retrieval and performance data display
+- **storage/artifacts.py**: Model management interfaces and deployment controls
+
+### With AI Layer
+- **ai/baseline.py**: Strategy configuration and performance monitoring
+- **ai/bo_suggester.py**: Optimization parameter tuning and result visualization
+
+## Usage Examples
+
+### CLI Operations
 ```python
-# Run CLI commands
-python -m ui.cli trade --mode manual --symbol BTCUSDC
-python -m ui.cli monitor sessions
-python -m ui.cli safety status
+# Initialize CLI
+cli = TradingBotCLI(config)
+
+# Start interactive mode
+await cli.start_interactive_mode()
+
+# Execute trade via CLI
+await cli.execute_trade_command("BTCUSDC", "BUY", "0.1")
+
+# Show portfolio status
+await cli.show_portfolio_status()
+
+# Configure strategy
+await cli.configure_strategy("grid_trader")
+
+# Display trade history
+await cli.show_trade_history(days=7)
 ```
 
-#### `TradingMode(Enum)`
-- **What**: Enumeration defining available trading modes
-- **Why**: Provides structured mode selection for different trading approaches
-- **What for**: Mode-specific parameter collection and operation
-- **Example**:
+### Web Dashboard Setup
 ```python
-class TradingMode(Enum):
-    MANUAL = "manual"  # Manual parameter input
-    AUTO = "auto"      # AI-assisted parameters
-    PAPER = "paper"    # Paper trading mode
+# Initialize dashboard
+dashboard = TradingDashboard(config, session_manager)
+
+# Start web server
+await dashboard.run(host="0.0.0.0", port=8080)
+
+# Get portfolio data for API
+portfolio_data = await dashboard.get_portfolio_data()
+
+# Generate performance charts
+chart_data = await dashboard.get_performance_charts()
 ```
 
-#### `GridParameters.__init__(symbol, lower_bound, upper_bound, grid_count, investment_per_grid)`
-- **What**: Data class for structured grid trading parameter storage
-- **Why**: Provides type-safe parameter management with validation
-- **What for**: Grid strategy configuration and validation
-- **Example**:
+### Session Management
 ```python
-params = GridParameters(
-    symbol="BTCUSDC",
-    lower_bound=Decimal("48000"),
-    upper_bound=Decimal("52000"),
-    grid_count=20,
-    investment_per_grid=Decimal("50")
+# Initialize session manager
+session_mgr = SessionManager(
+    secret_key="your-secret-key",
+    session_timeout=3600
+)
+
+# User authentication
+token = await session_mgr.authenticate_user("admin", "password")
+if token:
+    print("Authentication successful")
+
+# Validate session
+user_data = await session_mgr.validate_session(token)
+if user_data:
+    print(f"Valid session for user: {user_data['username']}")
+
+# Refresh expired session
+new_token = await session_mgr.refresh_session(refresh_token)
+
+# Logout user
+await session_mgr.logout_user(token)
+```
+
+### Security Operations
+```python
+# Initialize security manager
+security = SecurityManager(config)
+
+# Check permissions
+has_permission = security.check_permission(
+    user=user_data,
+    resource="trading",
+    action="execute"
+)
+
+# Encrypt sensitive data
+encrypted_api_key = security.encrypt_sensitive_data(api_key)
+
+# Audit logging
+security.audit_log(
+    user="admin",
+    action="trade_execution",
+    resource="BTCUSDC",
+    result="success"
 )
 ```
 
-#### `collect_grid_parameters(mode: TradingMode, symbol: str) -> GridParameters`
-- **What**: Interactive parameter collection with mode-specific handling
-- **Why**: Guides users through parameter setup with validation
-- **What for**: User-friendly parameter configuration
-- **Example**:
+### Real-time Dashboard Features
 ```python
-params = collect_grid_parameters(TradingMode.MANUAL, "BTCUSDC")
-# Interactive prompts for price bounds, grid count, investment amounts
-# Returns: Validated GridParameters object
+# WebSocket handling for real-time updates
+@dashboard.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    
+    # Stream real-time data
+    while True:
+        portfolio_data = await dashboard.get_portfolio_data()
+        await websocket.send_json(portfolio_data)
+        await asyncio.sleep(1)
+
+# API endpoints for data retrieval
+@dashboard.get("/api/trades")
+async def get_trades(days: int = 30):
+    return await dashboard.get_trade_history(days)
+
+@dashboard.post("/api/execute-trade")
+async def execute_trade(trade_request: TradeRequest):
+    return await dashboard.execute_trade(trade_request)
 ```
 
-#### `trade_manual(symbol, config_file=None)`
-- **What**: Executes manual trading mode with user-specified parameters
-- **Why**: Provides hands-on trading control with custom parameters
-- **What for**: Manual trading strategy execution
-- **Example**:
+### Configuration Management
 ```python
-@app.command()
-def trade_manual(symbol: str = "BTCUSDC", config_file: Optional[str] = None):
-    # Collects parameters interactively
-    # Executes grid trading with manual configuration
-```
-
-#### `trade_auto(symbol, use_ai=True)`
-- **What**: Executes automated trading mode with AI-suggested parameters
-- **Why**: Provides AI-optimized trading with minimal user input
-- **What for**: Automated trading strategy execution
-- **Example**:
-```python
-@app.command()
-def trade_auto(symbol: str = "BTCUSDC", use_ai: bool = True):
-    # Uses AI to suggest optimal parameters
-    # Executes trading with automated configuration
-```
-
-#### `SessionManager.__init__()`
-- **What**: Manages active trading sessions with lifecycle control
-- **Why**: Provides session tracking and management capabilities
-- **What for**: Multi-session trading and monitoring
-- **Example**:
-```python
-session_mgr = SessionManager()
-session_id = session_mgr.create_session(grid_params)
-status = session_mgr.get_session_status(session_id)
-```
-
-#### `monitor_sessions()`
-- **What**: Displays real-time status of all active trading sessions
-- **Why**: Provides visibility into running trading operations
-- **What for**: Session monitoring and performance tracking
-- **Example**:
-```python
-@monitor_app.command("sessions")
-def monitor_sessions():
-    # Displays table of active sessions with:
-    # - Session ID, Symbol, Status, P&L, Duration
-    # - Real-time updates every 5 seconds
-```
-
-#### `adjust_parameters(session_id: str)`
-- **What**: Allows real-time adjustment of trading session parameters
-- **Why**: Enables dynamic strategy optimization during execution
-- **What for**: Live parameter tuning and risk management
-- **Example**:
-```python
-@monitor_app.command("adjust-parameters")
-def adjust_parameters(session_id: str):
-    # Interactive parameter adjustment
-    # Updates grid spacing, position limits, etc.
-```
-
-#### `safety_status()`
-- **What**: Displays comprehensive safety system status and alerts
-- **Why**: Provides visibility into risk management systems
-- **What for**: Risk monitoring and safety verification
-- **Example**:
-```python
-@safety_app.command("status")
-def safety_status():
-    # Displays:
-    # - Overall safety status
-    # - Active alerts and warnings
-    # - Risk metrics and thresholds
-```
-
-#### `emergency_stop(session_id: str)`
-- **What**: Executes immediate emergency stop for a trading session
-- **Why**: Provides emergency risk control capability
-- **What for**: Emergency position closure and risk mitigation
-- **Example**:
-```python
-@safety_app.command("emergency-stop")
-def emergency_stop(session_id: str):
-    # Immediately stops trading
-    # Cancels all orders
-    # Closes positions if configured
-```
-
-#### `monitor_market_conditions()`
-- **What**: Displays real-time market condition analysis and regime detection
-- **Why**: Provides market insight for trading decisions
-- **What for**: Market analysis and strategy adaptation
-- **Example**:
-```python
-@monitor_app.command("market-conditions")
-def monitor_market_conditions():
-    # Shows:
-    # - Market regime (CALM, VOLATILE, EXTREME)
-    # - Trend analysis and strength
-    # - Volatility metrics
-```
-
-#### `flatten(symbol, reason="Manual")`
-- **What**: Executes position flattening operation for emergency closure
-- **Why**: Provides immediate position closure capability
-- **What for**: Emergency position management and risk control
-- **Example**:
-```python
-@app.command()
-def flatten(symbol: str, reason: str = "Manual"):
-    # Cancels all orders for symbol
-    # Closes all positions
-    # Provides execution summary
-```
-
-#### `backtest_grid(symbol, start_date, end_date, config_file=None)`
-- **What**: Executes grid trading strategy backtesting
-- **Why**: Validates strategy performance on historical data
-- **What for**: Strategy testing and optimization
-- **Example**:
-```python
-@backtest_app.command("grid")
-def backtest_grid(
-    symbol: str,
-    start_date: str,
-    end_date: str,
-    config_file: Optional[str] = None
-):
-    # Runs grid strategy backtest
-    # Generates performance report
-    # Saves results to database
-```
-
-#### `export_data(format, output_dir, tables=None)`
-- **What**: Exports trading data to various formats (CSV, JSON, Excel)
-- **Why**: Enables external analysis and reporting
-- **What for**: Data export and compliance reporting
-- **Example**:
-```python
-@data_app.command("export")
-def export_data(
-    format: str = "csv",
-    output_dir: str = "exports",
-    tables: Optional[List[str]] = None
-):
-    # Exports specified data to chosen format
-    # Creates organized output structure
-```
-
-### dashboard.py
-
-#### `DashboardData.__init__(repository=None)`
-- **What**: Initializes dashboard data provider with repository connection
-- **Why**: Provides data aggregation for dashboard display
-- **What for**: Dashboard data management and presentation
-- **Example**:
-```python
-dashboard_data = DashboardData(repository=custom_repo)
-```
-
-#### `get_portfolio_summary()`
-- **What**: Retrieves current portfolio summary with key metrics
-- **Why**: Provides high-level portfolio overview
-- **What for**: Portfolio monitoring and performance tracking
-- **Example**:
-```python
-summary = await dashboard_data.get_portfolio_summary()
-# Returns: {
-#   'total_value': 10500.0,
-#   'pnl_24h': 250.0,
-#   'pnl_7d': 500.0,
-#   'total_trades': 150,
-#   'win_rate': 0.65
-# }
-```
-
-#### `get_recent_trades(limit=50)`
-- **What**: Retrieves recent trading activity with filtering
-- **Why**: Provides visibility into recent trading operations
-- **What for**: Trade monitoring and analysis
-- **Example**:
-```python
-trades = await dashboard_data.get_recent_trades(limit=20)
-# Returns: List of recent trades with timestamps, symbols, P&L
-```
-
-#### `get_performance_chart_data(days=30)`
-- **What**: Generates data for portfolio performance charts
-- **Why**: Provides visual performance tracking over time
-- **What for**: Performance visualization and trend analysis
-- **Example**:
-```python
-chart_data = await dashboard_data.get_performance_chart_data(days=7)
-# Returns: {'dates': [...], 'values': [...], 'pnl': [...]}
-```
-
-#### `get_strategy_performance()`
-- **What**: Retrieves performance breakdown by trading strategy
-- **Why**: Enables strategy comparison and optimization
-- **What for**: Strategy analysis and selection
-- **Example**:
-```python
-performance = await dashboard_data.get_strategy_performance()
-# Returns: List of strategies with performance metrics
-```
-
-#### `SimpleDashboard.display_summary()`
-- **What**: Displays text-based portfolio summary in console
-- **Why**: Provides quick portfolio overview without web interface
-- **What for**: Console-based monitoring and reporting
-- **Example**:
-```python
-dashboard = SimpleDashboard()
-await dashboard.display_summary()
-# Outputs formatted portfolio summary to console
-```
-
-#### `display_recent_trades(limit=10)`
-- **What**: Displays recent trades in formatted table
-- **Why**: Provides quick trade history overview
-- **What for**: Recent activity monitoring
-- **Example**:
-```python
-await dashboard.display_recent_trades(limit=5)
-# Displays formatted table of 5 most recent trades
-```
-
-#### `run_full_dashboard()`
-- **What**: Runs complete dashboard display with all sections
-- **Why**: Provides comprehensive trading overview
-- **What for**: Complete trading status review
-- **Example**:
-```python
-await dashboard.run_full_dashboard()
-# Displays:
-# - Portfolio summary
-# - Recent trades
-# - Strategy performance
-# - Market data status
-```
-
-#### `WebDashboard.start_server()`
-- **What**: Starts web-based dashboard server (placeholder)
-- **Why**: Provides browser-based interface for monitoring
-- **What for**: Web-based trading dashboard (future implementation)
-- **Example**:
-```python
-web_dashboard = WebDashboard(host="localhost", port=8080)
-await web_dashboard.start_server()
-# Would start web server for browser-based dashboard
-```
-
-#### `create_streamlit_dashboard()`
-- **What**: Creates Streamlit-based interactive dashboard
-- **Why**: Provides rich, interactive web interface for monitoring
-- **What for**: Advanced dashboard with charts and real-time updates
-- **Example**:
-```python
-if create_streamlit_dashboard():
-    # Run with: streamlit run dashboard.py
-    # Provides interactive web dashboard with:
-    # - Real-time portfolio metrics
-    # - Interactive performance charts
-    # - Trade history tables
-    # - Strategy performance analysis
-```
-
-#### `quick_status_check()`
-- **What**: Performs quick status check and displays summary
-- **Why**: Provides rapid status overview for monitoring
-- **What for**: Quick health checks and status verification
-- **Example**:
-```python
-await quick_status_check()
-# Quickly displays current portfolio status and key metrics
+# Interactive configuration through CLI
+async def configure_trading_parameters():
+    cli = TradingBotCLI(config)
+    
+    # Grid trading configuration
+    await cli.configure_strategy("grid_trader")
+    
+    # Risk management settings
+    await cli.configure_risk_parameters()
+    
+    # Exchange connection setup
+    await cli.configure_exchange_settings()
+    
+    # Save configuration
+    await cli.save_configuration()
 ```
