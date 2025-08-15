@@ -20,14 +20,4 @@ __github__ = "michaelandrewrm"
 __license__ = "MIT"
 
 # Package metadata
-__all__ = [
-    "core",
-    "data", 
-    "exec",
-    "sim",
-    "storage",
-    "ui",
-    "ai",
-    "reports"
-]
-
+__all__ = ["core", "data", "exec", "sim", "storage", "ui", "ai", "reports"]

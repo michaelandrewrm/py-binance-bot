@@ -37,7 +37,7 @@ default:
     default_symbol: "BTCUSDC"
     default_timeframe: "5m"
     max_position_size: 1000.0
-    risk_percentage: 0.02
+    risk_per_trade: 0.02
     fee_percentage: 0.001
   
   # Grid trading configuration
@@ -96,7 +96,7 @@ dev:
   
   trading:
     max_position_size: 100.0  # Smaller position size for dev
-    risk_percentage: 0.01     # Lower risk for dev
+    risk_per_trade: 0.01     # Lower risk for dev
   
   grid:
     n_grids: 5               # Fewer grids for faster testing
@@ -144,7 +144,7 @@ prod:
   
   trading:
     max_position_size: 5000.0
-    risk_percentage: 0.015
+    risk_per_trade: 0.015
   
   cache:
     max_age_hours: 6        # More frequent cache updates

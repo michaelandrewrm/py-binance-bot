@@ -15,6 +15,9 @@ dateparser>=1.2.0
 python-dotenv>=1.1.0
 questionary>=2.0.0
 
+# === SECURITY DEPENDENCIES ===
+cryptography>=43.0.0  # For secure credential storage
+
 # === CONFIGURATION MANAGEMENT ===
 pydantic>=2.5.0  # Type validation and settings management
 pydantic-settings>=2.0.0  # Environment variable handling
