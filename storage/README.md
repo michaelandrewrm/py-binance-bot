@@ -1,320 +1,274 @@
 # Storage Directory
 
-## File Overview
+## Purpose
 
-This directory contains data persistence and storage modules for managing trading data, models, and artifacts.
+The storage directory provides comprehensive data persistence and artifact management, including SQLite-based trade storage, machine learning model management, and performance analytics. This layer ensures data integrity and efficient retrieval for all system operations.
 
-### Python Files
+## Architecture
 
-#### `repo.py`
-- **Purpose**: Main data repository with SQLite database and file storage
-- **Functionality**: Provides comprehensive data persistence for trades, klines, backtests, and bot states
+The storage layer provides:
+- **Persistent Data Management**: SQLite database for trade history, state management, and analytics
+- **ML Artifact Storage**: Model versioning, metric tracking, and artifact lifecycle management
+- **Performance Analytics**: Trade analysis, portfolio tracking, and performance measurement
+- **Data Integrity**: ACID compliance, backup systems, and data validation
 
-#### `artifacts.py`
-- **Purpose**: Machine learning model and strategy artifact storage
-- **Functionality**: Manages storage and retrieval of trained models, strategies, and other ML artifacts
+## Files Overview
 
-## Function Documentation
+### Core Storage Components
 
-### repo.py
+#### `repo.py` - Trade Repository (729 lines)
+- **SQLite Database Management**: Complete trade and state persistence with ACID compliance
+- **Trade History**: Comprehensive trade logging with execution details and performance metrics
+- **State Management**: Bot state persistence for reliable restart and recovery
+- **Query Interface**: Efficient data retrieval with filtering, sorting, and aggregation
+- **Performance Analytics**: Built-in trade analysis and portfolio performance calculation
 
-#### `SQLiteRepository.__init__(db_path="trading_bot.db")`
-- **What**: Initializes SQLite-based repository with database creation
-- **Why**: Provides persistent storage for all trading data and results
-- **What for**: Data persistence, analysis, and audit trails
-- **Example**:
+#### `artifacts.py` - ML Artifact Manager (402 lines)
+- **Model Versioning**: Complete ML model lifecycle management with version control
+- **Metric Tracking**: Performance metrics storage and historical comparison
+- **Artifact Storage**: Efficient storage of models, datasets, and training artifacts
+- **Cleanup Management**: Automatic artifact cleanup with retention policies
+- **Backup Systems**: Automated backup and restore for critical ML assets
+
+## Key Functions and Classes
+
+### Trade Repository System
+
+#### Database Management
+**`TradeRepo.__init__(db_path: str = "trades.db")`**
+- **Purpose**: Initialize SQLite database with proper schema and indexing
+- **Parameters**: Database file path (defaults to trades.db)
+- **Features**: Automatic schema creation, migration support, connection pooling
+- **Usage**: Primary interface for all trade data operations
+
+**`TradeRepo.save_trade(trade_data: TradeData) -> int`**
+- **Purpose**: Persist trade information with complete execution details
+- **Parameters**: TradeData object with order details, prices, and timestamps
+- **Returns**: Unique trade ID for future reference
+- **Features**: Automatic P&L calculation, duplicate detection, data validation
+- **Usage**: Called after every trade execution for permanent record keeping
+
+**`TradeRepo.get_trade_history(symbol: Optional[str] = None, days: int = 30) -> List[TradeData]`**
+- **Purpose**: Retrieve historical trades with flexible filtering options
+- **Parameters**: Optional symbol filter, time range in days
+- **Returns**: List of TradeData objects matching criteria
+- **Features**: Efficient indexing, pagination support, sorting options
+- **Usage**: Performance analysis, tax reporting, strategy evaluation
+
+#### State Management
+**`TradeRepo.save_bot_state(state: BotState) -> None`**
+- **Purpose**: Persist complete bot state for reliable restart capability
+- **Parameters**: BotState object with positions, balances, and configuration
+- **Features**: Atomic updates, versioning, rollback capability
+- **Usage**: Called periodically and before shutdown for state preservation
+
+**`TradeRepo.load_bot_state() -> Optional[BotState]`**
+- **Purpose**: Restore bot state from database on startup
+- **Returns**: BotState object or None if no saved state exists
+- **Features**: State validation, corruption detection, recovery options
+- **Usage**: Bot initialization to restore previous session state
+
+#### Performance Analytics
+**`TradeRepo.calculate_performance_metrics(days: int = 30) -> PerformanceMetrics`**
+- **Purpose**: Calculate comprehensive trading performance statistics
+- **Parameters**: Analysis period in days
+- **Returns**: PerformanceMetrics with returns, Sharpe ratio, drawdown analysis
+- **Features**: Risk-adjusted returns, benchmark comparison, drawdown calculation
+- **Usage**: Performance evaluation, strategy comparison, reporting
+
+**`TradeRepo.get_portfolio_value_history(days: int = 30) -> List[Tuple[datetime, Decimal]]`**
+- **Purpose**: Track portfolio value changes over time
+- **Parameters**: Analysis period in days
+- **Returns**: Time series of portfolio values
+- **Features**: Real-time value calculation, historical tracking, trend analysis
+- **Usage**: Portfolio monitoring, performance visualization, risk assessment
+
+### ML Artifact Management
+
+#### Model Storage and Versioning
+**`ArtifactManager.__init__(base_path: str = "artifacts/")`**
+- **Purpose**: Initialize artifact storage with proper directory structure
+- **Parameters**: Base storage path for all ML artifacts
+- **Features**: Automatic directory creation, permission management, backup setup
+- **Usage**: Central hub for all ML model and data management
+
+**`ArtifactManager.save_model(model: Any, name: str, version: str, metadata: Dict) -> str`**
+- **Purpose**: Save ML model with versioning and comprehensive metadata
+- **Parameters**: Model object, name identifier, version string, metadata dictionary
+- **Returns**: Unique artifact ID for future reference
+- **Features**: Model serialization, metadata validation, version conflict detection
+- **Usage**: Model persistence after training, deployment preparation
+
+**`ArtifactManager.load_model(name: str, version: Optional[str] = None) -> Tuple[Any, Dict]`**
+- **Purpose**: Load ML model with specific version or latest available
+- **Parameters**: Model name, optional version (defaults to latest)
+- **Returns**: Tuple of model object and metadata
+- **Features**: Version resolution, dependency checking, lazy loading
+- **Usage**: Model deployment, inference, continued training
+
+#### Metric Tracking
+**`ArtifactManager.save_metrics(experiment_id: str, metrics: Dict[str, float]) -> None`**
+- **Purpose**: Store training and validation metrics for experiment tracking
+- **Parameters**: Experiment identifier, metrics dictionary
+- **Features**: Time series storage, metric validation, aggregation support
+- **Usage**: Training progress tracking, model comparison, hyperparameter optimization
+
+**`ArtifactManager.get_metric_history(experiment_id: str, metric_name: str) -> List[Tuple[datetime, float]]`**
+- **Purpose**: Retrieve historical metric values for analysis
+- **Parameters**: Experiment ID, specific metric name
+- **Returns**: Time series of metric values
+- **Features**: Efficient querying, interpolation, trend analysis
+- **Usage**: Training visualization, convergence analysis, performance comparison
+
+#### Artifact Lifecycle
+**`ArtifactManager.list_artifacts(name_pattern: Optional[str] = None) -> List[ArtifactInfo]`**
+- **Purpose**: List available artifacts with filtering and metadata
+- **Parameters**: Optional name pattern for filtering
+- **Returns**: List of artifact information objects
+- **Features**: Pattern matching, metadata extraction, size calculation
+- **Usage**: Artifact discovery, storage management, cleanup planning
+
+**`ArtifactManager.cleanup_old_artifacts(retention_days: int = 30) -> int`**
+- **Purpose**: Remove old artifacts based on retention policy
+- **Parameters**: Retention period in days
+- **Returns**: Number of artifacts removed
+- **Features**: Safe deletion, backup verification, usage tracking
+- **Usage**: Storage management, cost optimization, maintenance
+
+## Database Schema
+
+### Core Tables
+
+#### trades
+- **id** (INTEGER PRIMARY KEY): Unique trade identifier
+- **symbol** (TEXT): Trading pair (e.g., BTCUSDC)
+- **side** (TEXT): BUY or SELL operation
+- **quantity** (DECIMAL): Trade quantity with precision
+- **price** (DECIMAL): Execution price
+- **timestamp** (DATETIME): Trade execution time
+- **pnl** (DECIMAL): Realized profit/loss
+- **fees** (DECIMAL): Trading fees paid
+- **strategy** (TEXT): Strategy that generated the trade
+- **metadata** (JSON): Additional trade context
+
+#### bot_states
+- **id** (INTEGER PRIMARY KEY): State version identifier
+- **timestamp** (DATETIME): State save time
+- **state_data** (JSON): Complete bot state serialization
+- **checksum** (TEXT): Data integrity verification
+
+#### portfolio_snapshots
+- **id** (INTEGER PRIMARY KEY): Snapshot identifier
+- **timestamp** (DATETIME): Snapshot time
+- **total_value** (DECIMAL): Portfolio value in USDC
+- **positions** (JSON): Active positions data
+- **balances** (JSON): Account balances
+
+## Integration Points
+
+### With Core System
+- **core/executor.py**: Trade execution logging and state persistence
+- **core/safety.py**: Risk metric storage and historical analysis
+- **core/state.py**: State management and persistence coordination
+
+### With AI Layer
+- **ai/baseline.py**: Model storage and performance metric tracking
+- **ai/bo_suggester.py**: Optimization result storage and experiment tracking
+- **ai/validation.py**: Validation metric storage and model comparison
+
+### With UI Layer
+- **ui/dashboard.py**: Performance data retrieval for visualization
+- **reports/**: Historical data for comprehensive report generation
+
+## Usage Examples
+
+### Trade Repository Operations
 ```python
-repo = SQLiteRepository("production_bot.db")
-# Creates/opens database with optimized settings
-```
+# Initialize repository
+repo = TradeRepo("trading_data.db")
 
-#### `save_trade(trade_record)`
-- **What**: Saves a trade record to the database with full details
-- **Why**: Maintains complete trade history for analysis and reporting
-- **What for**: Trade logging, performance analysis, and compliance
-- **Example**:
-```python
-trade = TradeRecord(
-    run_id="session_123",
-    order_id="binance_456",
+# Save trade execution
+trade = TradeData(
     symbol="BTCUSDC",
     side="BUY",
-    quantity=Decimal("0.001"),
-    price=Decimal("50000"),
+    quantity=Decimal("0.1"),
+    price=Decimal("50000.00"),
     timestamp=datetime.now(timezone.utc)
 )
-repo.save_trade(trade)
+trade_id = await repo.save_trade(trade)
+
+# Retrieve trade history
+recent_trades = await repo.get_trade_history(days=7)
+btc_trades = await repo.get_trade_history(symbol="BTCUSDC", days=30)
+
+# Performance analysis
+metrics = await repo.calculate_performance_metrics(days=30)
+print(f"Total Return: {metrics.total_return:.2%}")
+print(f"Sharpe Ratio: {metrics.sharpe_ratio:.2f}")
+print(f"Max Drawdown: {metrics.max_drawdown:.2%}")
 ```
 
-#### `load_trades(run_id=None, symbol=None, start_time=None, end_time=None, limit=None)`
-- **What**: Loads trade records with flexible filtering options
-- **Why**: Enables analysis and reporting on historical trades
-- **What for**: Performance analysis, strategy evaluation, and reporting
-- **Example**:
+### State Management
 ```python
-trades = repo.load_trades(
-    symbol="BTCUSDC",
-    start_time=datetime.now() - timedelta(days=7),
-    limit=100
+# Save bot state
+current_state = BotState(
+    positions={"BTCUSDC": position_data},
+    balances={"USDC": balance_data},
+    configuration=config_dict
 )
-# Returns: List[TradeRecord] for last 7 days
+await repo.save_bot_state(current_state)
+
+# Restore on startup
+saved_state = await repo.load_bot_state()
+if saved_state:
+    bot.restore_state(saved_state)
 ```
 
-#### `save_klines(klines, symbol, interval)`
-- **What**: Saves kline (candlestick) data to database with efficient storage
-- **Why**: Maintains historical price data for analysis and backtesting
-- **What for**: Market analysis, strategy development, and backtesting
-- **Example**:
+### ML Artifact Management
 ```python
-repo.save_klines(klines_list, "BTCUSDC", "1h")
-# Saves hourly kline data with deduplication
-```
+# Initialize artifact manager
+artifacts = ArtifactManager("ml_artifacts/")
 
-#### `load_klines(symbol, interval, start_time=None, end_time=None, limit=None)`
-- **What**: Loads kline data with time-based filtering
-- **Why**: Provides historical price data for analysis
-- **What for**: Chart data, technical analysis, and strategy backtesting
-- **Example**:
-```python
-klines = repo.load_klines(
-    symbol="BTCUSDC",
-    interval="1h",
-    start_time=datetime.now() - timedelta(days=30)
-)
-# Returns: List[KlineData] for last 30 days
-```
-
-#### `save_backtest_result(result)`
-- **What**: Saves complete backtest results including performance metrics
-- **Why**: Preserves backtest results for comparison and analysis
-- **What for**: Strategy evaluation, optimization, and reporting
-- **Example**:
-```python
-result = BacktestResult(
-    strategy_name="grid_trading",
-    symbol="BTCUSDC",
-    start_time=start_dt,
-    end_time=end_dt,
-    initial_capital=Decimal("1000"),
-    final_capital=Decimal("1150"),
-    total_return=Decimal("0.15"),
-    max_drawdown=Decimal("0.05"),
-    trades=trades_list
-)
-repo.save_backtest_result(result)
-```
-
-#### `load_backtest_results(strategy_name=None, symbol=None, limit=None)`
-- **What**: Loads historical backtest results with filtering
-- **Why**: Enables comparison and analysis of strategy performance
-- **What for**: Strategy evaluation and optimization
-- **Example**:
-```python
-results = repo.load_backtest_results(
-    strategy_name="grid_trading",
-    symbol="BTCUSDC",
-    limit=10
-)
-# Returns: List[BacktestResult] for recent backtests
-```
-
-#### `save_bot_state(state, run_id)`
-- **What**: Saves current bot state for persistence and recovery
-- **Why**: Enables bot recovery after restarts or failures
-- **What for**: State management and disaster recovery
-- **Example**:
-```python
-repo.save_bot_state(current_bot_state, "session_123")
-# Saves complete bot state including positions and orders
-```
-
-#### `load_bot_state(run_id)`
-- **What**: Loads previously saved bot state for recovery
-- **Why**: Enables seamless bot restart and state recovery
-- **What for**: Bot recovery and session continuation
-- **Example**:
-```python
-recovered_state = repo.load_bot_state("session_123")
-# Returns: BotState object with all previous data
-```
-
-#### `get_trading_summary(run_id=None, start_time=None, end_time=None)`
-- **What**: Generates comprehensive trading performance summary
-- **Why**: Provides quick overview of trading performance
-- **What for**: Performance monitoring and reporting
-- **Example**:
-```python
-summary = repo.get_trading_summary(
-    start_time=datetime.now() - timedelta(days=30)
-)
-# Returns: {'total_trades': 150, 'total_pnl': 250.5, 'win_rate': 0.65, ...}
-```
-
-#### `export_data(format="csv", output_dir="exports", tables=None)`
-- **What**: Exports database data to various formats (CSV, JSON, Excel)
-- **Why**: Enables data analysis in external tools and reporting
-- **What for**: Data export, external analysis, and compliance reporting
-- **Example**:
-```python
-repo.export_data(
-    format="csv",
-    output_dir="reports/2024_q1",
-    tables=["trades", "klines"]
-)
-# Exports specified tables to CSV files
-```
-
-#### `FileRepository.__init__(base_path="data")`
-- **What**: Initializes file-based repository with directory structure
-- **Why**: Provides alternative storage using file system
-- **What for**: Simple storage, development, and backup scenarios
-- **Example**:
-```python
-file_repo = FileRepository("trading_data")
-# Creates directory structure for file-based storage
-```
-
-#### `save_klines_parquet(klines, symbol, interval)`
-- **What**: Saves kline data in efficient Parquet format
-- **Why**: Provides fast, compressed storage for large datasets
-- **What for**: High-performance data storage and analytics
-- **Example**:
-```python
-file_repo.save_klines_parquet(klines_list, "BTCUSDC", "1m")
-# Saves data in compressed Parquet format
-```
-
-#### `load_klines_parquet(symbol, interval)`
-- **What**: Loads kline data from Parquet files
-- **Why**: Provides fast access to large datasets
-- **What for**: Analytics and backtesting with large data volumes
-- **Example**:
-```python
-klines = file_repo.load_klines_parquet("BTCUSDC", "1m")
-# Returns: List[KlineData] loaded from Parquet
-```
-
-### artifacts.py
-
-#### `ArtifactManager.__init__(base_path="artifacts")`
-- **What**: Initializes artifact storage manager with directory structure
-- **Why**: Provides organized storage for models and ML artifacts
-- **What for**: Model versioning, deployment, and management
-- **Example**:
-```python
-artifact_mgr = ArtifactManager("ml_models")
-# Creates directory structure for artifact storage
-```
-
-#### `save_model(model, name, model_type, version="1.0", metadata=None)`
-- **What**: Saves machine learning model with versioning and metadata
-- **Why**: Enables model versioning and deployment management
-- **What for**: Model storage, versioning, and production deployment
-- **Example**:
-```python
-metadata = {
-    "accuracy": 0.87,
-    "training_data": "BTCUSDC_2024_Q1",
-    "features": ["SMA", "RSI", "MACD"]
-}
-artifact_mgr.save_model(
+# Save trained model
+model_id = await artifacts.save_model(
     model=trained_model,
     name="price_predictor",
-    model_type="tensorflow",
-    version="2.1",
-    metadata=metadata
+    version="1.2.0",
+    metadata={
+        "accuracy": 0.87,
+        "training_samples": 10000,
+        "features": ["price", "volume", "rsi"]
+    }
 )
+
+# Load model for inference
+model, metadata = await artifacts.load_model("price_predictor", "1.2.0")
+prediction = model.predict(input_data)
+
+# Track training metrics
+await artifacts.save_metrics("exp_001", {
+    "loss": 0.023,
+    "accuracy": 0.87,
+    "val_loss": 0.031
+})
+
+# Cleanup old artifacts
+removed_count = await artifacts.cleanup_old_artifacts(retention_days=30)
+print(f"Removed {removed_count} old artifacts")
 ```
 
-#### `load_model(name, version="latest")`
-- **What**: Loads a previously saved model by name and version
-- **Why**: Enables model deployment and inference
-- **What for**: Loading trained models for prediction and trading
-- **Example**:
+### Performance Monitoring
 ```python
-model = artifact_mgr.load_model("price_predictor", version="2.1")
-# Returns: Loaded model ready for inference
-```
+# Portfolio value tracking
+value_history = await repo.get_portfolio_value_history(days=30)
+current_value = value_history[-1][1]
+initial_value = value_history[0][1]
+return_pct = (current_value - initial_value) / initial_value
 
-#### `list_models(model_type=None)`
-- **What**: Lists all available models with optional type filtering
-- **Why**: Provides visibility into available models and versions
-- **What for**: Model management and selection
-- **Example**:
-```python
-models = artifact_mgr.list_models(model_type="tensorflow")
-# Returns: [{'name': 'price_predictor', 'version': '2.1', ...}, ...]
-```
-
-#### `save_strategy_config(config, name, version="1.0")`
-- **What**: Saves trading strategy configuration with versioning
-- **Why**: Enables strategy configuration management and deployment
-- **What for**: Strategy versioning and parameter management
-- **Example**:
-```python
-config = {
-    "grid_levels": 20,
-    "grid_spacing": 0.001,
-    "max_position": 1000,
-    "risk_limit": 0.02
-}
-artifact_mgr.save_strategy_config(config, "btc_grid_v1", "1.3")
-```
-
-#### `load_strategy_config(name, version="latest")`
-- **What**: Loads strategy configuration by name and version
-- **Why**: Enables consistent strategy deployment and testing
-- **What for**: Strategy configuration loading and execution
-- **Example**:
-```python
-config = artifact_mgr.load_strategy_config("btc_grid_v1", "1.3")
-# Returns: Strategy configuration dictionary
-```
-
-#### `save_backtest_artifacts(artifacts, strategy_name, run_id)`
-- **What**: Saves backtest artifacts including plots, reports, and data
-- **Why**: Preserves backtest results for analysis and reporting
-- **What for**: Backtest result storage and analysis
-- **Example**:
-```python
-artifacts = {
-    "equity_curve": equity_plot,
-    "trade_analysis": trade_report,
-    "performance_metrics": metrics_dict
-}
-artifact_mgr.save_backtest_artifacts(artifacts, "grid_trading", "run_123")
-```
-
-#### `create_model_package(name, version, include_dependencies=True)`
-- **What**: Creates deployable package with model and dependencies
-- **Why**: Enables easy model deployment and distribution
-- **What for**: Model deployment and production packaging
-- **Example**:
-```python
-package_path = artifact_mgr.create_model_package(
-    "price_predictor",
-    "2.1",
-    include_dependencies=True
-)
-# Returns: Path to deployment-ready package
-```
-
-#### `validate_model_integrity(name, version)`
-- **What**: Validates model file integrity using checksums
-- **Why**: Ensures model files haven't been corrupted
-- **What for**: Model integrity verification and security
-- **Example**:
-```python
-is_valid = artifact_mgr.validate_model_integrity("price_predictor", "2.1")
-# Returns: True if model files are intact
-```
-
-#### `cleanup_old_versions(days_to_keep=30)`
-- **What**: Removes old model versions to manage storage space
-- **Why**: Prevents storage bloat from accumulating model versions
-- **What for**: Storage management and cleanup automation
-- **Example**:
-```python
-removed_count = artifact_mgr.cleanup_old_versions(days_to_keep=60)
-# Returns: Number of old versions removed
+# Detailed performance analysis
+metrics = await repo.calculate_performance_metrics(days=90)
+print(f"Win Rate: {metrics.win_rate:.1%}")
+print(f"Avg Win: ${metrics.avg_win:.2f}")
+print(f"Avg Loss: ${metrics.avg_loss:.2f}")
+print(f"Profit Factor: {metrics.profit_factor:.2f}")
 ```

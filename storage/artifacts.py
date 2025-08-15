@@ -18,76 +18,88 @@ import hashlib
 
 logger = logging.getLogger(__name__)
 
+
 class ModelArtifact:
     """Represents a saved machine learning model"""
-    
-    def __init__(self, name: str, model_type: str, version: str = "1.0",
-                 metadata: Optional[Dict] = None):
+
+    def __init__(
+        self,
+        name: str,
+        model_type: str,
+        version: str = "1.0",
+        metadata: Optional[Dict] = None,
+    ):
         self.name = name
         self.model_type = model_type
         self.version = version
         self.metadata = metadata or {}
         self.created_at = datetime.now(timezone.utc)
         self.file_hash = None
-    
+
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization"""
         return {
-            'name': self.name,
-            'model_type': self.model_type,
-            'version': self.version,
-            'metadata': self.metadata,
-            'created_at': self.created_at.isoformat(),
-            'file_hash': self.file_hash
+            "name": self.name,
+            "model_type": self.model_type,
+            "version": self.version,
+            "metadata": self.metadata,
+            "created_at": self.created_at.isoformat(),
+            "file_hash": self.file_hash,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict) -> 'ModelArtifact':
+    def from_dict(cls, data: Dict) -> "ModelArtifact":
         """Create from dictionary"""
         artifact = cls(
-            name=data['name'],
-            model_type=data['model_type'],
-            version=data['version'],
-            metadata=data.get('metadata', {})
+            name=data["name"],
+            model_type=data["model_type"],
+            version=data["version"],
+            metadata=data.get("metadata", {}),
         )
-        artifact.created_at = datetime.fromisoformat(data['created_at'])
-        artifact.file_hash = data.get('file_hash')
+        artifact.created_at = datetime.fromisoformat(data["created_at"])
+        artifact.file_hash = data.get("file_hash")
         return artifact
+
 
 class ArtifactManager:
     """
     Manages storage and retrieval of ML models and strategy artifacts
     """
-    
+
     def __init__(self, base_path: str = "artifacts"):
         self.base_path = Path(base_path)
         self.base_path.mkdir(exist_ok=True)
-        
+
         # Create subdirectories
         self.models_path = self.base_path / "models"
         self.strategies_path = self.base_path / "strategies"
         self.configs_path = self.base_path / "configs"
         self.exports_path = self.base_path / "exports"
-        
-        for path in [self.models_path, self.strategies_path, self.configs_path, self.exports_path]:
+
+        for path in [
+            self.models_path,
+            self.strategies_path,
+            self.configs_path,
+            self.exports_path,
+        ]:
             path.mkdir(exist_ok=True)
-        
+
         # Initialize artifact registry
         self.registry_file = self.base_path / "registry.json"
         self.registry = self._load_registry()
-    
+
     def _load_registry(self) -> Dict:
         """Load artifact registry"""
         if self.registry_file.exists():
-            with open(self.registry_file, 'r') as f:
+            with open(self.registry_file, "r") as f:
                 return json.load(f)
-        return {'models': {}, 'strategies': {}, 'configs': {}}
-    
+        return {"models": {}, "strategies": {}, "configs": {}}
+
     def _save_registry(self):
         """Save artifact registry"""
-        with open(self.registry_file, 'w') as f:
+        with open(self.registry_file, "w") as f:
             json.dump(self.registry, f, indent=2)
-    
+
     def _calculate_file_hash(self, file_path: Path) -> str:
         """Calculate MD5 hash of file"""
         hash_md5 = hashlib.md5()
@@ -95,362 +107,385 @@ class ArtifactManager:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
-    
-    def save_keras_model(self, model, name: str, version: str = "1.0",
-                        metadata: Optional[Dict] = None) -> ModelArtifact:
+
+    def save_keras_model(
+        self, model, name: str, version: str = "1.0", metadata: Optional[Dict] = None
+    ) -> ModelArtifact:
         """Save Keras model"""
         try:
             # Import here to avoid dependency issues
             from tensorflow import keras
-            
+
             artifact = ModelArtifact(name, "keras", version, metadata)
-            
+
             # Create model directory
             model_dir = self.models_path / f"{name}_v{version}"
             model_dir.mkdir(exist_ok=True)
-            
+
             # Save model
             model_file = model_dir / "model.keras"
             model.save(model_file)
-            
+
             # Calculate hash
             artifact.file_hash = self._calculate_file_hash(model_file)
-            
+
             # Save metadata
             metadata_file = model_dir / "metadata.json"
-            with open(metadata_file, 'w') as f:
+            with open(metadata_file, "w") as f:
                 json.dump(artifact.to_dict(), f, indent=2)
-            
+
             # Update registry
-            self.registry['models'][f"{name}_v{version}"] = artifact.to_dict()
+            self.registry["models"][f"{name}_v{version}"] = artifact.to_dict()
             self._save_registry()
-            
+
             logger.info(f"Saved Keras model: {name} v{version}")
             return artifact
-            
+
         except ImportError:
             logger.error("TensorFlow not available for saving Keras model")
             raise
         except Exception as e:
             logger.error(f"Error saving Keras model: {e}")
             raise
-    
+
     def load_keras_model(self, name: str, version: str = "1.0"):
         """Load Keras model"""
         try:
             from tensorflow import keras
-            
+
             model_dir = self.models_path / f"{name}_v{version}"
             model_file = model_dir / "model.keras"
-            
+
             if not model_file.exists():
                 raise FileNotFoundError(f"Model not found: {name} v{version}")
-            
+
             model = keras.models.load_model(model_file)
             logger.info(f"Loaded Keras model: {name} v{version}")
             return model
-            
+
         except ImportError:
             logger.error("TensorFlow not available for loading Keras model")
             raise
         except Exception as e:
             logger.error(f"Error loading Keras model: {e}")
             raise
-    
-    def save_sklearn_model(self, model, name: str, version: str = "1.0",
-                          metadata: Optional[Dict] = None) -> ModelArtifact:
+
+    def save_sklearn_model(
+        self, model, name: str, version: str = "1.0", metadata: Optional[Dict] = None
+    ) -> ModelArtifact:
         """Save scikit-learn model"""
         artifact = ModelArtifact(name, "sklearn", version, metadata)
-        
+
         # Create model directory
         model_dir = self.models_path / f"{name}_v{version}"
         model_dir.mkdir(exist_ok=True)
-        
+
         # Save model using joblib
         model_file = model_dir / "model.joblib"
         joblib.dump(model, model_file)
-        
+
         # Calculate hash
         artifact.file_hash = self._calculate_file_hash(model_file)
-        
+
         # Save metadata
         metadata_file = model_dir / "metadata.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(artifact.to_dict(), f, indent=2)
-        
+
         # Update registry
-        self.registry['models'][f"{name}_v{version}"] = artifact.to_dict()
+        self.registry["models"][f"{name}_v{version}"] = artifact.to_dict()
         self._save_registry()
-        
+
         logger.info(f"Saved sklearn model: {name} v{version}")
         return artifact
-    
+
     def load_sklearn_model(self, name: str, version: str = "1.0"):
         """Load scikit-learn model"""
         model_dir = self.models_path / f"{name}_v{version}"
         model_file = model_dir / "model.joblib"
-        
+
         if not model_file.exists():
             raise FileNotFoundError(f"Model not found: {name} v{version}")
-        
+
         model = joblib.load(model_file)
         logger.info(f"Loaded sklearn model: {name} v{version}")
         return model
-    
-    def save_strategy_config(self, config: Dict, name: str, version: str = "1.0") -> ModelArtifact:
+
+    def save_strategy_config(
+        self, config: Dict, name: str, version: str = "1.0"
+    ) -> ModelArtifact:
         """Save strategy configuration"""
         artifact = ModelArtifact(name, "strategy_config", version, config)
-        
+
         # Create config directory
         config_dir = self.configs_path / f"{name}_v{version}"
         config_dir.mkdir(exist_ok=True)
-        
+
         # Save config
         config_file = config_dir / "config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config, f, indent=2)
-        
+
         # Calculate hash
         artifact.file_hash = self._calculate_file_hash(config_file)
-        
+
         # Save metadata
         metadata_file = config_dir / "metadata.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(artifact.to_dict(), f, indent=2)
-        
+
         # Update registry
-        self.registry['configs'][f"{name}_v{version}"] = artifact.to_dict()
+        self.registry["configs"][f"{name}_v{version}"] = artifact.to_dict()
         self._save_registry()
-        
+
         logger.info(f"Saved strategy config: {name} v{version}")
         return artifact
-    
+
     def load_strategy_config(self, name: str, version: str = "1.0") -> Dict:
         """Load strategy configuration"""
         config_dir = self.configs_path / f"{name}_v{version}"
         config_file = config_dir / "config.json"
-        
+
         if not config_file.exists():
             raise FileNotFoundError(f"Strategy config not found: {name} v{version}")
-        
-        with open(config_file, 'r') as f:
+
+        with open(config_file, "r") as f:
             config = json.load(f)
-        
+
         logger.info(f"Loaded strategy config: {name} v{version}")
         return config
-    
-    def save_optimization_results(self, results: Dict, strategy_name: str,
-                                symbol: str) -> str:
+
+    def save_optimization_results(
+        self, results: Dict, strategy_name: str, symbol: str
+    ) -> str:
         """Save hyperparameter optimization results"""
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"{strategy_name}_{symbol}_optimization_{timestamp}"
-        
+
         # Create results directory
         results_dir = self.exports_path / "optimization_results"
         results_dir.mkdir(exist_ok=True)
-        
+
         # Save results
         results_file = results_dir / f"{filename}.json"
-        with open(results_file, 'w') as f:
+        with open(results_file, "w") as f:
             json.dump(results, f, indent=2, default=str)
-        
+
         logger.info(f"Saved optimization results: {filename}")
         return str(results_file)
-    
-    def export_model_bundle(self, model_name: str, version: str = "1.0",
-                          include_configs: bool = True) -> str:
+
+    def export_model_bundle(
+        self, model_name: str, version: str = "1.0", include_configs: bool = True
+    ) -> str:
         """Export model as a complete bundle"""
         bundle_name = f"{model_name}_v{version}_bundle_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         bundle_dir = self.exports_path / bundle_name
         bundle_dir.mkdir(exist_ok=True)
-        
+
         # Copy model files
         model_dir = self.models_path / f"{model_name}_v{version}"
         if model_dir.exists():
             shutil.copytree(model_dir, bundle_dir / "model")
-        
+
         # Copy related configs if requested
         if include_configs:
             config_dir = self.configs_path / f"{model_name}_v{version}"
             if config_dir.exists():
                 shutil.copytree(config_dir, bundle_dir / "config")
-        
+
         # Create bundle manifest
         manifest = {
-            'model_name': model_name,
-            'version': version,
-            'created_at': datetime.now(timezone.utc).isoformat(),
-            'includes_config': include_configs,
-            'files': list(bundle_dir.rglob('*'))
+            "model_name": model_name,
+            "version": version,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "includes_config": include_configs,
+            "files": list(bundle_dir.rglob("*")),
         }
-        
+
         manifest_file = bundle_dir / "manifest.json"
-        with open(manifest_file, 'w') as f:
+        with open(manifest_file, "w") as f:
             json.dump(manifest, f, indent=2, default=str)
-        
+
         # Create ZIP archive
-        archive_path = shutil.make_archive(str(bundle_dir), 'zip', str(bundle_dir))
-        
+        archive_path = shutil.make_archive(str(bundle_dir), "zip", str(bundle_dir))
+
         # Clean up directory
         shutil.rmtree(bundle_dir)
-        
+
         logger.info(f"Exported model bundle: {archive_path}")
         return archive_path
-    
+
     def list_models(self, model_type: Optional[str] = None) -> List[Dict]:
         """List all saved models"""
         models = []
-        for key, artifact_data in self.registry['models'].items():
-            if model_type is None or artifact_data['model_type'] == model_type:
+        for key, artifact_data in self.registry["models"].items():
+            if model_type is None or artifact_data["model_type"] == model_type:
                 models.append(artifact_data)
-        
-        return sorted(models, key=lambda x: x['created_at'], reverse=True)
-    
+
+        return sorted(models, key=lambda x: x["created_at"], reverse=True)
+
     def list_strategies(self) -> List[Dict]:
         """List all saved strategy configs"""
         strategies = []
-        for key, artifact_data in self.registry['configs'].items():
+        for key, artifact_data in self.registry["configs"].items():
             strategies.append(artifact_data)
-        
-        return sorted(strategies, key=lambda x: x['created_at'], reverse=True)
-    
+
+        return sorted(strategies, key=lambda x: x["created_at"], reverse=True)
+
     def delete_model(self, name: str, version: str = "1.0"):
         """Delete a saved model"""
         model_key = f"{name}_v{version}"
         model_dir = self.models_path / model_key
-        
+
         if model_dir.exists():
             shutil.rmtree(model_dir)
-        
-        if model_key in self.registry['models']:
-            del self.registry['models'][model_key]
+
+        if model_key in self.registry["models"]:
+            del self.registry["models"][model_key]
             self._save_registry()
-        
+
         logger.info(f"Deleted model: {name} v{version}")
-    
+
     def get_model_info(self, name: str, version: str = "1.0") -> Optional[Dict]:
         """Get information about a saved model"""
         model_key = f"{name}_v{version}"
-        return self.registry['models'].get(model_key)
-    
+        return self.registry["models"].get(model_key)
+
     def cleanup_old_models(self, keep_latest: int = 5):
         """Clean up old model versions, keeping only the latest N"""
         model_groups = {}
-        
+
         # Group models by name
-        for key, artifact_data in self.registry['models'].items():
-            name = artifact_data['name']
+        for key, artifact_data in self.registry["models"].items():
+            name = artifact_data["name"]
             if name not in model_groups:
                 model_groups[name] = []
             model_groups[name].append((key, artifact_data))
-        
+
         # Clean up each group
         for name, models in model_groups.items():
             # Sort by creation date
-            models.sort(key=lambda x: x[1]['created_at'], reverse=True)
-            
+            models.sort(key=lambda x: x[1]["created_at"], reverse=True)
+
             # Keep only the latest N
             to_delete = models[keep_latest:]
-            
+
             for key, artifact_data in to_delete:
-                version = artifact_data['version']
+                version = artifact_data["version"]
                 self.delete_model(name, version)
-        
-        logger.info(f"Cleaned up old models, keeping {keep_latest} latest versions each")
+
+        logger.info(
+            f"Cleaned up old models, keeping {keep_latest} latest versions each"
+        )
+
 
 class ModelVersionManager:
     """
     Manages model versioning and deployment
     """
-    
+
     def __init__(self, artifact_manager: ArtifactManager):
         self.artifact_manager = artifact_manager
         self.deployment_file = artifact_manager.base_path / "deployments.json"
         self.deployments = self._load_deployments()
-    
+
     def _load_deployments(self) -> Dict:
         """Load deployment registry"""
         if self.deployment_file.exists():
-            with open(self.deployment_file, 'r') as f:
+            with open(self.deployment_file, "r") as f:
                 return json.load(f)
         return {}
-    
+
     def _save_deployments(self):
         """Save deployment registry"""
-        with open(self.deployment_file, 'w') as f:
+        with open(self.deployment_file, "w") as f:
             json.dump(self.deployments, f, indent=2)
-    
-    def deploy_model(self, model_name: str, version: str, environment: str = "production"):
+
+    def deploy_model(
+        self, model_name: str, version: str, environment: str = "production"
+    ):
         """Deploy a model version to an environment"""
         model_key = f"{model_name}_v{version}"
-        
+
         # Verify model exists
-        if model_key not in self.artifact_manager.registry['models']:
+        if model_key not in self.artifact_manager.registry["models"]:
             raise ValueError(f"Model not found: {model_name} v{version}")
-        
+
         # Update deployment registry
         if environment not in self.deployments:
             self.deployments[environment] = {}
-        
+
         self.deployments[environment][model_name] = {
-            'version': version,
-            'deployed_at': datetime.now(timezone.utc).isoformat(),
-            'model_key': model_key
+            "version": version,
+            "deployed_at": datetime.now(timezone.utc).isoformat(),
+            "model_key": model_key,
         }
-        
+
         self._save_deployments()
         logger.info(f"Deployed {model_name} v{version} to {environment}")
-    
-    def get_deployed_model(self, model_name: str, environment: str = "production") -> Optional[str]:
+
+    def get_deployed_model(
+        self, model_name: str, environment: str = "production"
+    ) -> Optional[str]:
         """Get the deployed version of a model"""
         env_deployments = self.deployments.get(environment, {})
         deployment = env_deployments.get(model_name)
-        
+
         if deployment:
-            return deployment['version']
+            return deployment["version"]
         return None
-    
-    def rollback_model(self, model_name: str, target_version: str, 
-                      environment: str = "production"):
+
+    def rollback_model(
+        self, model_name: str, target_version: str, environment: str = "production"
+    ):
         """Rollback a model to a previous version"""
         current_version = self.get_deployed_model(model_name, environment)
-        
+
         if current_version == target_version:
             logger.info(f"Model {model_name} already at version {target_version}")
             return
-        
+
         # Deploy the target version
         self.deploy_model(model_name, target_version, environment)
-        logger.info(f"Rolled back {model_name} from v{current_version} to v{target_version}")
+        logger.info(
+            f"Rolled back {model_name} from v{current_version} to v{target_version}"
+        )
+
 
 # Convenience functions
+
 
 def get_default_artifact_manager() -> ArtifactManager:
     """Get default artifact manager instance"""
     return ArtifactManager()
 
-def save_model_with_metadata(model, name: str, model_type: str = "auto",
-                           performance_metrics: Optional[Dict] = None,
-                           training_config: Optional[Dict] = None) -> ModelArtifact:
+
+def save_model_with_metadata(
+    model,
+    name: str,
+    model_type: str = "auto",
+    performance_metrics: Optional[Dict] = None,
+    training_config: Optional[Dict] = None,
+) -> ModelArtifact:
     """Save model with comprehensive metadata"""
     manager = get_default_artifact_manager()
-    
+
     # Auto-detect model type
     if model_type == "auto":
-        if hasattr(model, 'save') and hasattr(model, 'layers'):
+        if hasattr(model, "save") and hasattr(model, "layers"):
             model_type = "keras"
-        elif hasattr(model, 'predict') and hasattr(model, 'fit'):
+        elif hasattr(model, "predict") and hasattr(model, "fit"):
             model_type = "sklearn"
         else:
             model_type = "unknown"
-    
+
     # Build metadata
     metadata = {}
     if performance_metrics:
-        metadata['performance'] = performance_metrics
+        metadata["performance"] = performance_metrics
     if training_config:
-        metadata['training_config'] = training_config
-    
+        metadata["training_config"] = training_config
+
     # Save based on type
     if model_type == "keras":
         return manager.save_keras_model(model, name, metadata=metadata)
@@ -459,12 +494,13 @@ def save_model_with_metadata(model, name: str, model_type: str = "auto",
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
 
+
 def backup_artifacts(backup_path: str = None):
     """Create backup of all artifacts"""
     if backup_path is None:
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         backup_path = f"artifacts_backup_{timestamp}"
-    
+
     manager = get_default_artifact_manager()
     shutil.copytree(manager.base_path, backup_path)
     logger.info(f"Artifacts backed up to {backup_path}")
