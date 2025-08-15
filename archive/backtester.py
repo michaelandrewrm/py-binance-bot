@@ -4,6 +4,7 @@ import heapq
 import numpy as np
 import pandas as pd
 
+
 def simulate_grid_trades(
     price_series: pd.Series,
     lower_price: float,
@@ -41,7 +42,9 @@ def simulate_grid_trades(
         pnl (float or None): profit and loss for the trade (None for buys).
     """
 
-    if lower_price > upper_price or math.isclose(lower_price, upper_price, abs_tol=1e-9):
+    if lower_price > upper_price or math.isclose(
+        lower_price, upper_price, abs_tol=1e-9
+    ):
         raise ValueError("`lower_price` must be less than `upper_price`.")
     if num_levels <= 1:
         raise ValueError("`num_levels` must be greater than 1.")
@@ -53,7 +56,7 @@ def simulate_grid_trades(
         raise ValueError("`price_series` must not be empty.")
     if not price_series.index.is_monotonic_increasing:
         raise ValueError("`price_series` index must be sorted in increasing order.")
-    
+
     if logger is None:
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.INFO)
@@ -62,7 +65,7 @@ def simulate_grid_trades(
         levels = np.linspace(lower_price, upper_price, num_levels, endpoint=False)
         grid_spacing = levels[1] - levels[0]
         return levels, grid_spacing
-    
+
     levels, grid_spacing = build_grid(lower_price, upper_price, num_levels)
     cash = 0.0
     position = 0.0  # + long, − short
@@ -75,7 +78,9 @@ def simulate_grid_trades(
         nonlocal cash, position
         cash -= quantity * lvl * (1 + fee)
         position += quantity
-        trades.append({"time": ts, "side": "buy", "price": lvl, "qty": quantity, "pnl": None})
+        trades.append(
+            {"time": ts, "side": "buy", "price": lvl, "qty": quantity, "pnl": None}
+        )
         heapq.heappush(active_sells, (lvl + grid_spacing, quantity, lvl))
         active_sell_levels.add(lvl + grid_spacing)
         logger.info(f"{ts} BUY  {quantity:.6f} @ {lvl:.2f}")
@@ -86,7 +91,9 @@ def simulate_grid_trades(
         cash += revenue
         position -= qty
         pnl = revenue - qty * buy_price
-        trades.append({"time": ts, "side": "sell", "price": trig, "qty": qty, "pnl": pnl})
+        trades.append(
+            {"time": ts, "side": "sell", "price": trig, "qty": qty, "pnl": pnl}
+        )
         active_sell_levels.discard(trig)
         logger.info(f"{ts} SELL {qty:.6f} @ {trig:.2f}  PnL {pnl:.2f}")
 
@@ -98,7 +105,9 @@ def simulate_grid_trades(
         idx = np.searchsorted(grid_levels, price, side="right") - 1
         while idx >= 0:
             lvl = grid_levels[idx]
-            if not grid_level_states[lvl] and (price <= lvl or math.isclose(price, lvl, abs_tol=1e-9)):
+            if not grid_level_states[lvl] and (
+                price <= lvl or math.isclose(price, lvl, abs_tol=1e-9)
+            ):
                 execute_buy(ts, lvl)
                 grid_level_states[lvl] = True
                 idx -= 1
@@ -106,7 +115,10 @@ def simulate_grid_trades(
                 break
 
         # Always check queued sells, even if a buy occurred
-        while active_sells and (price >= active_sells[0][0] or math.isclose(price, active_sells[0][0], abs_tol=1e-9)):
+        while active_sells and (
+            price >= active_sells[0][0]
+            or math.isclose(price, active_sells[0][0], abs_tol=1e-9)
+        ):
             trig, qty, buy_price = heapq.heappop(active_sells)
             execute_sell(ts, trig, qty, buy_price)
         equity_curve.append(cash + position * price)

@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from datetime import timedelta
 
-load_dotenv()  
+load_dotenv()
 
 # Binance API keys
 API_KEY = os.getenv("API_KEY")
@@ -38,7 +38,7 @@ SYMBOLS = {
             "DROPOUT_RATES": [0.2, 0.3, 0.4],
             "GRU_UNITS": [64, 128, 256],
             "L2_REG": [1e-4, 1e-5],
-        }
+        },
     },
     "ETHUSDC": {
         "base_asset": "ETH",
@@ -63,7 +63,7 @@ SYMBOLS = {
             "DROPOUT_RATES": [0.2, 0.3, 0.4],
             "GRU_UNITS": [64, 128, 256],
             "L2_REG": [1e-4, 1e-5],
-        }
+        },
     },
     "WLDUSDC": {
         "base_asset": "WLD",
@@ -89,13 +89,17 @@ SYMBOLS = {
             "GRU_UNITS": [64, 128, 256],
             "L2_REG": [1e-4, 1e-5],
         },
-    }
+    },
 }
+
 
 def get_config_for_symbol(symbol):
     if symbol not in SYMBOLS:
-        raise ValueError(f"Unknown symbol '{symbol}'! Choose from: {list(SYMBOLS.keys())}")
+        raise ValueError(
+            f"Unknown symbol '{symbol}'! Choose from: {list(SYMBOLS.keys())}"
+        )
     return SYMBOLS[symbol]
+
 
 def get_config_for_interval(interval, symbol):
     DEFAULT_GRID_CONFIG = {

@@ -1,6 +1,7 @@
 import time
 from logger import logging
 
+
 def get_with_retry(func, *args, **kwargs):
     retries = 0
     max_retries = 10

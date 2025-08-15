@@ -3,17 +3,27 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 import joblib  # for saving and loading
 
+
 class FeatureEngineer:
     def __init__(self, window=30):
         self.window = window
         self.scaler = StandardScaler()
         self.feature_cols = [
-            "SMA_10", "EMA_10", "RSI_14", "MACD", "MACD_signal",
-            "BB_High", "BB_Low", "Volume_Avg_10",
-            "vol_change_pct", "volatility", "log_return",
-            "%K", "%D"
+            "SMA_10",
+            "EMA_10",
+            "RSI_14",
+            "MACD",
+            "MACD_signal",
+            "BB_High",
+            "BB_Low",
+            "Volume_Avg_10",
+            "vol_change_pct",
+            "volatility",
+            "log_return",
+            "%K",
+            "%D",
         ]
-    
+
     def add_stochastic_oscillator(self, df, k_window=14, d_window=3):
         low_min = df["low"].rolling(window=k_window).min()
         high_max = df["high"].rolling(window=k_window).max()
@@ -60,10 +70,10 @@ class FeatureEngineer:
 
         X, y = [], []
         for i in range(self.window, len(df) - 1):
-            X.append(df[self.feature_cols].iloc[i - self.window:i].values)
+            X.append(df[self.feature_cols].iloc[i - self.window : i].values)
             y.append(int(df["close"].iloc[i + 1] > df["close"].iloc[i]))
 
-        return df.iloc[self.window:-1], np.array(X), np.array(y)
+        return df.iloc[self.window : -1], np.array(X), np.array(y)
 
     def transform_live(self, df):
         df = self.add_indicators(df).dropna().copy()
