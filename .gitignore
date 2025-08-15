@@ -202,3 +202,4 @@ final_model_full_data.keras
 
 trading_bot_env
 summary/
+config.json

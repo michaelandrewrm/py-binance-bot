@@ -164,7 +164,11 @@ pip install -r requirements-minimal.txt
 
 4. **Configure credentials**:
 ```bash
-python -m ui.cli config setup
+python -m ui.cli config init
+```
+
+```bash
+python -m ui.cli config show
 ```
 
 5. **Validate configuration**:
@@ -315,8 +319,8 @@ python -m flake8 .
 
 ## 📚 Documentation
 
-- **📖 [Full Glossary](GLOSSARY.md)**: Complete terminology reference for trading and technical terms
 - **👨‍💻 [Developer Docs](DEVELOPER_DOCS.md)**: Detailed API documentation and development guides
+- **📖 [Full Glossary](GLOSSARY.md)**: Complete terminology reference for trading and technical terms
 - **📁 Directory READMEs**: See individual directory documentation for module-specific information
 
 ## 🤝 Contributing
