@@ -24,7 +24,10 @@ try:
 except ImportError:
     ENCRYPTION_AVAILABLE = False
 
-from .output import security_output
+from .output import OutputHandler
+
+
+logger = OutputHandler("ui.security")
 
 
 class SecurityError(Exception):
@@ -36,11 +39,8 @@ class SecurityError(Exception):
 def check_encryption_available():
     """Check if encryption is available and configured"""
     if not ENCRYPTION_AVAILABLE:
-        security_output.warning(
-            "Cryptography library not available. Install with: pip install cryptography",
-            console_style="yellow",
-        )
-        security_output.warning("Falling back to basic credential storage")
+        logger.warning("Cryptography library not available. Install with: pip install cryptography")
+        logger.warning("Falling back to basic credential storage")
         return False
 
     return True
@@ -57,7 +57,7 @@ def get_encryption_key() -> bytes:
         try:
             return base64.urlsafe_b64decode(env_key.encode())
         except Exception as e:
-            security_output.error(f"Invalid encryption key in environment: {e}")
+            logger.error(f"Invalid encryption key in environment: {e}")
             raise SecurityError("Invalid encryption key in environment")
 
     # Fall back to password-based key derivation for interactive use
@@ -81,7 +81,7 @@ def get_encryption_key() -> bytes:
 def encrypt_credentials(api_key: str, api_secret: str) -> Dict[str, str]:
     """Encrypt API credentials for secure storage"""
     if not ENCRYPTION_AVAILABLE:
-        security_output.warning("Storing credentials without encryption")
+        logger.warning("Storing credentials without encryption")
         return {"api_key": api_key, "api_secret": api_secret, "encrypted": False}
 
     try:
@@ -94,7 +94,7 @@ def encrypt_credentials(api_key: str, api_secret: str) -> Dict[str, str]:
             "encrypted": True,
         }
     except Exception as e:
-        security_output.error(f"Encryption failed: {e}")
+        logger.error(f"Encryption failed: {e}")
         raise SecurityError(f"Failed to encrypt credentials: {e}")
 
 
@@ -121,7 +121,7 @@ def decrypt_credentials(config: Dict[str, Any]) -> Tuple[str, str]:
     except KeyError as e:
         raise SecurityError(f"Missing encrypted credential: {e}")
     except Exception as e:
-        security_output.error(f"Decryption failed: {e}")
+        logger.error(f"Decryption failed: {e}")
         raise SecurityError(f"Failed to decrypt credentials: {e}")
 
 

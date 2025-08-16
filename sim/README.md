@@ -17,21 +17,21 @@ The simulation layer provides:
 
 ### Core Simulation Components
 
-#### `engine.py` - Simulation Engine (590 lines)
+#### `engine.py` - Simulation Engine
 - **Market Simulation**: Complete trading environment simulation with realistic market dynamics
 - **Order Execution**: Realistic order execution with market impact and timing considerations
 - **Portfolio Management**: Real-time portfolio tracking during simulation runs
 - **Event Processing**: Market event simulation including news, volatility, and liquidity changes
 - **Performance Tracking**: Comprehensive performance measurement throughout simulation
 
-#### `evaluation.py` - Strategy Evaluation (529 lines)
+#### `evaluation.py` - Strategy Evaluation
 - **Strategy Testing**: Comprehensive strategy evaluation framework
 - **Performance Metrics**: Multiple performance metrics calculation and analysis
 - **Risk Analysis**: Simulation-based risk assessment and measurement
 - **Comparison Framework**: Strategy comparison and ranking system
 - **Statistical Analysis**: Statistical significance testing and confidence intervals
 
-#### `slippage.py` - Market Impact Modeling (381 lines)
+#### `slippage.py` - Market Impact Modeling
 - **Slippage Calculation**: Sophisticated slippage modeling based on market conditions
 - **Market Impact**: Order size impact on execution prices
 - **Liquidity Modeling**: Dynamic liquidity calculation and impact assessment

@@ -16,14 +16,14 @@ The data layer serves as the foundation for all trading operations by providing:
 
 ### Core Data Components
 
-#### `schema.py` - Data Structures (541 lines)
+#### `schema.py` - Data Structures
 - **Market Data Types**: Complete OHLCV data structures with precise Decimal arithmetic
 - **Trading Data**: Order, trade, and position data structures with serialization
 - **Event Data**: Market events, news, and real-time data stream structures
 - **Validation Framework**: Built-in data validation with type checking and range validation
 - **Serialization Support**: JSON and binary serialization for efficient storage and transmission
 
-#### `loader.py` - Data Loading Engine (504 lines)
+#### `loader.py` - Data Loading Engine
 - **Intelligent Caching**: Parquet-based caching with automatic cache invalidation
 - **Multi-source Loading**: Support for multiple data providers with failover
 - **Data Validation**: Comprehensive data quality checks and anomaly detection

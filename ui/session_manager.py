@@ -9,15 +9,14 @@ import threading
 from typing import Dict, Optional, List
 from datetime import datetime, timezone, timedelta
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from decimal import Decimal
 
 from core.grid_engine import GridConfig
-from .output import session_output
+from .output import OutputHandler
 
-# Session management operates mainly as debug/internal logging
-
+logger = OutputHandler("ui.session_manager")
 
 class TradingMode(Enum):
     MANUAL = "manual"
@@ -189,7 +188,7 @@ class ThreadSafeSessionManager:
                 [s for s in self.sessions.values() if s.is_active()]
             )
 
-        session_output.debug_only(f"Created session {session_id} for {symbol}")
+        logger.debug_only(f"Created session {session_id} for {symbol}")
         return session_id
 
     def _cleanup_old_sessions(self) -> int:
@@ -250,7 +249,7 @@ class ThreadSafeSessionManager:
             self.stats.active_count = len(
                 [s for s in self.sessions.values() if s.is_active()]
             )
-            session_output.debug_only(f"Cleaned up {removed_count} old sessions")
+            logger.debug_only(f"Cleaned up {removed_count} old sessions")
 
         return removed_count
 
@@ -279,7 +278,7 @@ class ThreadSafeSessionManager:
                 with self._session_lock():
                     self._cleanup_old_sessions()
             except Exception as e:
-                session_output.error(f"Error in periodic cleanup: {e}")
+                logger.error(f"Error in periodic cleanup: {e}")
 
     def get_session(self, session_id: str) -> Optional[TradingSession]:
         """Thread-safe session retrieval"""
@@ -305,7 +304,7 @@ class ThreadSafeSessionManager:
                 not session.is_active()
                 and session.status != TradingSessionStatus.STOPPED
             ):
-                session_output.warning(
+                logger.warning(
                     f"Setting inactive session as active: {session_id} (status: {session.status})"
                 )
 
@@ -313,7 +312,7 @@ class ThreadSafeSessionManager:
             if self.active_session and self.active_session != session_id:
                 old_session = self.sessions.get(self.active_session)
                 if old_session and old_session.is_active():
-                    session_output.debug_only(
+                    logger.debug_only(
                         f"Deactivating previous session: {self.active_session}"
                     )
 
@@ -418,7 +417,7 @@ class ThreadSafeSessionManager:
                 [s for s in self.sessions.values() if s.is_active()]
             )
 
-            session_output.debug_only(
+            logger.debug_only(
                 f"Session {session_id} status: {old_status.value} -> {status.value}"
             )
             return True
@@ -430,7 +429,7 @@ class ThreadSafeSessionManager:
 
     def shutdown(self):
         """Shutdown session manager and cleanup resources"""
-        session_output.debug_only("Shutting down session manager")
+        logger.debug_only("Shutting down session manager")
         self._stop_cleanup.set()
 
         if self._cleanup_thread.is_alive():
@@ -439,7 +438,7 @@ class ThreadSafeSessionManager:
         with self._session_lock():
             active_sessions = [s for s in self.sessions.values() if s.is_active()]
             if active_sessions:
-                session_output.warning(
+                logger.warning(
                     f"Shutting down with {len(active_sessions)} active sessions"
                 )
 

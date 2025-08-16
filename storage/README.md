@@ -16,14 +16,14 @@ The storage layer provides:
 
 ### Core Storage Components
 
-#### `repo.py` - Trade Repository (729 lines)
+#### `repo.py` - Trade Repository
 - **SQLite Database Management**: Complete trade and state persistence with ACID compliance
 - **Trade History**: Comprehensive trade logging with execution details and performance metrics
 - **State Management**: Bot state persistence for reliable restart and recovery
 - **Query Interface**: Efficient data retrieval with filtering, sorting, and aggregation
 - **Performance Analytics**: Built-in trade analysis and portfolio performance calculation
 
-#### `artifacts.py` - ML Artifact Manager (402 lines)
+#### `artifacts.py` - ML Artifact Manager
 - **Model Versioning**: Complete ML model lifecycle management with version control
 - **Metric Tracking**: Performance metrics storage and historical comparison
 - **Artifact Storage**: Efficient storage of models, datasets, and training artifacts

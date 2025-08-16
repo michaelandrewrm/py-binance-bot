@@ -17,7 +17,7 @@ The core layer serves as the central nervous system of the trading bot, coordina
 
 ### Core Trading Infrastructure
 
-#### `executor.py` - Trading Executor (892 lines)
+#### `executor.py` - Trading Executor
 - **Main Trading Loop**: Asynchronous execution engine with strategy callbacks and market monitoring
 - **Strategy Integration**: Pluggable strategy system supporting multiple trading algorithms
 - **Risk Integration**: Real-time safety monitoring with circuit breaker integration
@@ -25,14 +25,14 @@ The core layer serves as the central nervous system of the trading bot, coordina
 - **Market Data Processing**: Real-time price monitoring and signal processing
 - **Error Recovery**: Comprehensive error handling with graceful degradation
 
-#### `safety.py` - Safety Manager (424 lines)
+#### `safety.py` - Safety Manager
 - **Multi-layer Protection**: Position limits, daily loss limits, and portfolio risk monitoring
 - **Circuit Breakers**: Automatic trading halt on excessive losses or unusual market conditions
 - **Real-time Monitoring**: Continuous risk assessment with configurable thresholds
 - **Manual Controls**: Emergency flatten operations and manual trading halts
 - **Risk Metrics**: Advanced risk calculations including VaR and position correlation
 
-#### `state.py` - State Management (287 lines)
+#### `state.py` - State Management
 - **Persistent State**: Complete trading bot state serialization and recovery
 - **Thread Safety**: Concurrent access protection for multi-threaded operations
 - **State Validation**: Integrity checking and error recovery for corrupted state
@@ -41,14 +41,14 @@ The core layer serves as the central nervous system of the trading bot, coordina
 
 ### Specialized Engines
 
-#### `grid_engine.py` - Grid Trading Engine (441 lines)
+#### `grid_engine.py` - Grid Trading Engine
 - **Grid Management**: Dynamic grid level creation and order management
 - **Order Coordination**: Intelligent order placement and execution tracking
 - **Profit Calculation**: Real-time P&L tracking and profit realization
 - **Grid Rebalancing**: Automatic grid adjustment based on market movement
 - **Risk Controls**: Grid-specific risk limits and position sizing
 
-#### `flatten.py` - Emergency Operations (168 lines)
+#### `flatten.py` - Emergency Operations
 - **Emergency Flatten**: Immediate position closure and order cancellation
 - **Graceful Shutdown**: Controlled trading bot shutdown with state preservation
 - **Recovery Operations**: Post-flatten state cleanup and recovery procedures
@@ -56,14 +56,14 @@ The core layer serves as the central nervous system of the trading bot, coordina
 
 ### Enhanced Systems
 
-#### `advanced_safety.py` - Advanced Risk Management (421 lines)
+#### `advanced_safety.py` - Advanced Risk Management
 - **Market Regime Detection**: Real-time market condition analysis and adaptation
 - **Dynamic Risk Adjustment**: Adaptive risk limits based on market volatility
 - **Alert System**: Multi-level alert system with notification integration
 - **Correlation Monitoring**: Cross-asset correlation analysis for portfolio risk
 - **Stress Testing**: Real-time stress testing and scenario analysis
 
-#### `enhanced_error_handling.py` - Error Management (267 lines)
+#### `enhanced_error_handling.py` - Error Management
 - **Categorized Error Handling**: Systematic error classification and response
 - **Recovery Strategies**: Automatic error recovery with fallback mechanisms
 - **Error Analytics**: Error pattern analysis and predictive error prevention

@@ -17,21 +17,21 @@ The AI layer provides:
 
 ### Core AI Components
 
-#### `baseline.py` - Technical Analysis Trading Strategies (628 lines)
+#### `baseline.py` - Technical Analysis Trading Strategies
 - **Technical Indicators**: Comprehensive technical analysis indicators (RSI, MACD, Bollinger Bands, SMA/EMA)
 - **Trading Signals**: Multi-timeframe signal generation with confidence scoring
 - **Strategy Framework**: Configurable trading strategies with parameter optimization
 - **Risk Management**: Built-in risk controls and position sizing algorithms
 - **Performance Tracking**: Real-time strategy performance monitoring and analytics
 
-#### `bo_suggester.py` - Bayesian Optimization Engine (389 lines)
+#### `bo_suggester.py` - Bayesian Optimization Engine
 - **Gaussian Process Models**: Advanced probabilistic models for parameter space exploration
 - **Acquisition Functions**: Multiple acquisition strategies (EI, UCB, PI) for optimal exploration
 - **Hyperparameter Optimization**: Automated optimization of trading strategy parameters
 - **Multi-objective Optimization**: Support for optimizing multiple conflicting objectives
 - **Convergence Analysis**: Optimization progress tracking and convergence detection
 
-#### `validation.py` - Strategy Validation Framework (134 lines)
+#### `validation.py` - Strategy Validation Framework
 - **Cross-Validation**: Time series cross-validation for strategy robustness testing
 - **Statistical Testing**: Hypothesis testing and significance analysis for strategy performance
 - **Overfitting Detection**: Methods to detect and prevent strategy overfitting

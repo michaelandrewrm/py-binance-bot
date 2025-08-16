@@ -17,14 +17,14 @@ The reports layer provides:
 
 ### Core Reporting Components
 
-#### `end_of_run.py` - Comprehensive Performance Reporting (865 lines)
+#### `end_of_run.py` - Comprehensive Performance Reporting
 - **End-of-Run Analysis**: Complete trading session performance evaluation
 - **Risk Metrics**: Comprehensive risk analysis including VaR, Sharpe ratio, and drawdown
 - **Trade Analytics**: Detailed trade-by-trade analysis with win/loss statistics
 - **Portfolio Tracking**: Complete portfolio evolution and performance attribution
 - **Visualization**: Charts and graphs for performance visualization and reporting
 
-#### `hodl_benchmark.py` - HODL Comparison Analysis (483 lines)
+#### `hodl_benchmark.py` - HODL Comparison Analysis
 - **HODL Strategy**: Buy-and-hold benchmark calculation and comparison
 - **Relative Performance**: Active trading vs passive holding performance analysis
 - **Risk-Adjusted Comparison**: Sharpe ratio and volatility-adjusted performance metrics

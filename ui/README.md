@@ -17,28 +17,28 @@ The UI layer provides:
 
 ### Core UI Components
 
-#### `cli.py` - Command Line Interface (2329 lines)
+#### `cli.py` - Command Line Interface
 - **Comprehensive CLI**: Full-featured command-line interface for all bot operations
 - **Interactive Menus**: User-friendly menu systems for complex operations
 - **Real-time Display**: Live trading data, portfolio status, and performance metrics
 - **Configuration Management**: Interactive bot configuration and strategy setup
 - **Automation Support**: Scriptable commands for automated deployment and management
 
-#### `dashboard.py` - Web Dashboard (404 lines)
+#### `dashboard.py` - Web Dashboard
 - **Real-time Dashboard**: Modern web interface with live data updates
 - **Performance Visualization**: Interactive charts for portfolio and trade analysis
 - **Trading Controls**: Web-based trade execution and strategy management
 - **Responsive Design**: Mobile-friendly interface for remote monitoring
 - **Data Export**: Trade history and performance report generation
 
-#### `session_manager.py` - Session Management (407 lines)
+#### `session_manager.py` - Session Management
 - **Secure Sessions**: JWT-based session management with refresh tokens
 - **User Authentication**: Multi-factor authentication support
 - **Session Persistence**: Secure session storage and recovery
 - **Access Control**: Role-based permissions and resource authorization
 - **Security Monitoring**: Login tracking and suspicious activity detection
 
-#### `security.py` - Security Framework (268 lines)
+#### `security.py` - Security Framework
 - **Authentication**: Secure user authentication with password policies
 - **Authorization**: Role-based access control (RBAC) system
 - **Encryption**: Data encryption for sensitive information

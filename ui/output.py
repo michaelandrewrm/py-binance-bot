@@ -147,8 +147,3 @@ class OutputHandler:
         self.message(
             text, MessageLevel.INFO, console_style=style, console_only=True, **kwargs
         )
-
-
-# Global instances for different contexts
-security_output = OutputHandler("ui.security")
-session_output = OutputHandler("ui.session_manager")
