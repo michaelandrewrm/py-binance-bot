@@ -79,7 +79,13 @@ def simulate_grid_trades(
         cash -= quantity * lvl * (1 + fee)
         position += quantity
         trades.append(
-            {"time": ts, "side": "buy", "price": lvl, "qty": quantity, "pnl": None}
+            {
+                "time": ts,
+                "side": "buy",
+                "price": lvl,
+                "qty": quantity,
+                "pnl": None,
+            }
         )
         heapq.heappush(active_sells, (lvl + grid_spacing, quantity, lvl))
         active_sell_levels.add(lvl + grid_spacing)

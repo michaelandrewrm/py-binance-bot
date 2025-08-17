@@ -166,7 +166,8 @@ class Trader:
         )
         self.lower_price = max(min_allowed, min(max_allowed, self.lower_price))
         self.upper_price = max(
-            self.lower_price + suggested_range, min(max_allowed, self.upper_price)
+            self.lower_price + suggested_range,
+            min(max_allowed, self.upper_price),
         )
 
         # Check grid brackets price and is wide enough for profit
@@ -363,7 +364,14 @@ class Trader:
         self.logger.info(msg)
 
     def update_position_and_pnl(
-        self, side, price, qty, commission, commission_asset, base_asset, quote_asset
+        self,
+        side,
+        price,
+        qty,
+        commission,
+        commission_asset,
+        base_asset,
+        quote_asset,
     ):
         fee_in_quote = 0.0
         fee_in_base = 0.0
@@ -410,7 +418,13 @@ class Trader:
             commission_asset = f["commissionAsset"]
             time_fill = f["time"]
             realized_pnl = self.update_position_and_pnl(
-                side, price, qty, commission, commission_asset, base_asset, quote_asset
+                side,
+                price,
+                qty,
+                commission,
+                commission_asset,
+                base_asset,
+                quote_asset,
             )
 
             self.trade_history.append(

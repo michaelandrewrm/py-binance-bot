@@ -97,7 +97,9 @@ def check_installed_packages() -> List[Tuple[str, str]]:
         return []
 
 
-def check_deprecated_packages(installed_packages: List[Tuple[str, str]]) -> List[str]:
+def check_deprecated_packages(
+    installed_packages: List[Tuple[str, str]],
+) -> List[str]:
     """Check for deprecated packages in installed packages."""
     deprecated_found = []
     installed_names = [pkg[0].lower() for pkg in installed_packages]

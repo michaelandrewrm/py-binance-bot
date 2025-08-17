@@ -86,7 +86,11 @@ def check_env_file() -> Dict[str, Any]:
         else:
             load_dotenv()
 
-            required_vars = ["BINANCE_API_KEY", "BINANCE_API_SECRET", "JWT_SECRET_KEY"]
+            required_vars = [
+                "BINANCE_API_KEY",
+                "BINANCE_API_SECRET",
+                "JWT_SECRET_KEY",
+            ]
 
             missing_vars = []
             for var in required_vars:

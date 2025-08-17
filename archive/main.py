@@ -44,7 +44,10 @@ parser.add_argument(
     help="Candlestick interval (e.g.: 5m, 15m, 1h, 4h)",
 )
 parser.add_argument(
-    "--mode", type=str, default="backtest", choices=["train", "backtest", "trade"]
+    "--mode",
+    type=str,
+    default="backtest",
+    choices=["train", "backtest", "trade"],
 )
 parser.add_argument(
     "--log-level",
@@ -160,7 +163,14 @@ def compute_grid_labels(data, idx, window=20, min_levels=5, max_levels=20):
     take_profit = recent_high + max(atr, grid_width * 0.15)
     trigger_price = recent_low * 1.002
 
-    return [recent_low, recent_high, levels, stop_loss, take_profit, trigger_price]
+    return [
+        recent_low,
+        recent_high,
+        levels,
+        stop_loss,
+        take_profit,
+        trigger_price,
+    ]
 
 
 def main(client, app_config):
@@ -185,10 +195,14 @@ def main(client, app_config):
     data_scaled = pd.concat(
         [
             pd.DataFrame(
-                scaled_train, columns=app_config.features, index=data.index[:split_idx]
+                scaled_train,
+                columns=app_config.features,
+                index=data.index[:split_idx],
             ),
             pd.DataFrame(
-                scaled_test, columns=app_config.features, index=data.index[split_idx:]
+                scaled_test,
+                columns=app_config.features,
+                index=data.index[split_idx:],
             ),
         ]
     ).reset_index(drop=True)
@@ -301,7 +315,10 @@ def main(client, app_config):
         monitor="val_loss", patience=5, restore_best_weights=True
     )
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
-        app_config.best_model_path, save_best_only=True, monitor="val_loss", mode="min"
+        app_config.best_model_path,
+        save_best_only=True,
+        monitor="val_loss",
+        mode="min",
     )
     best_model.fit(
         x_train,
