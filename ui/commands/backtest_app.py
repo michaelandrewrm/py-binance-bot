@@ -1,6 +1,7 @@
 """
 Backtesting commands for the trading bot CLI
 """
+
 import typer
 import asyncio
 import json
@@ -85,7 +86,7 @@ def run_backtest(
                 progress.update(task, description="Running backtest...")
 
                 # result = await engine.run_backtest(strategy_obj, klines)
-                
+
                 # Sample backtest result for demonstration
                 result = {
                     "strategy_name": strategy_name,
@@ -99,8 +100,8 @@ def run_backtest(
                         "sharpe_ratio": 1.2,
                         "max_drawdown": 0.08,
                         "total_trades": 150,
-                        "win_rate": 0.65
-                    }
+                        "win_rate": 0.65,
+                    },
                 }
 
                 progress.update(task, description="✅ Backtest complete!")
@@ -139,18 +140,18 @@ def _display_backtest_results(result):
 def _save_backtest_results(result, filename: str):
     """Save backtest results to file"""
     result_data = {
-        "strategy_name": result['strategy_name'],
-        "symbol": result['symbol'],
-        "start_date": result['start_date'].isoformat(),
-        "end_date": result['end_date'].isoformat(),
-        "initial_capital": float(result['initial_capital']),
-        "final_capital": float(result['final_capital']),
-        "total_return": float(result['total_return']),
+        "strategy_name": result["strategy_name"],
+        "symbol": result["symbol"],
+        "start_date": result["start_date"].isoformat(),
+        "end_date": result["end_date"].isoformat(),
+        "initial_capital": float(result["initial_capital"]),
+        "final_capital": float(result["final_capital"]),
+        "total_return": float(result["total_return"]),
         "metrics": {
-            "sharpe_ratio": float(result['metrics']['sharpe_ratio']),
-            "max_drawdown": float(result['metrics']['max_drawdown']),
-            "total_trades": result['metrics']['total_trades'],
-            "win_rate": float(result['metrics']['win_rate']),
+            "sharpe_ratio": float(result["metrics"]["sharpe_ratio"]),
+            "max_drawdown": float(result["metrics"]["max_drawdown"]),
+            "total_trades": result["metrics"]["total_trades"],
+            "win_rate": float(result["metrics"]["win_rate"]),
         },
     }
 

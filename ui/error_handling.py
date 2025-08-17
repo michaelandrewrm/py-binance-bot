@@ -62,7 +62,8 @@ def handle_cli_errors(func: Callable) -> Callable:
         except PermissionError as e:
             logger.error(f"Permission denied: {e}")
             logger.info(
-                "💡 Try running with appropriate permissions", console_style="yellow"
+                "💡 Try running with appropriate permissions",
+                console_style="yellow",
             )
             raise typer.Exit(1)
         except ConnectionError as e:
@@ -89,7 +90,8 @@ def handle_cli_errors(func: Callable) -> Callable:
                 log_extra={"function": func.__name__, "traceback": True},
             )
             logger.info(
-                "💡 Check logs for detailed error information", console_style="yellow"
+                "💡 Check logs for detailed error information",
+                console_style="yellow",
             )
             logger.console_only(
                 "💡 Consider reporting this issue if it persists", style="dim"

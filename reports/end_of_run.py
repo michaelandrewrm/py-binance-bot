@@ -96,7 +96,10 @@ class ReportGenerator:
         return str(filepath)
 
     def generate_trading_session_report(
-        self, trades: List[TradeRecord], session_start: datetime, session_end: datetime
+        self,
+        trades: List[TradeRecord],
+        session_start: datetime,
+        session_end: datetime,
     ) -> str:
         """Generate trading session report"""
 
@@ -119,7 +122,12 @@ class ReportGenerator:
 
         # Create HTML content
         html_content = self._create_session_html(
-            trades, session_metrics, session_start, session_end, pnl_chart, volume_chart
+            trades,
+            session_metrics,
+            session_start,
+            session_end,
+            pnl_chart,
+            volume_chart,
         )
 
         # Save report
@@ -130,7 +138,10 @@ class ReportGenerator:
         return str(filepath)
 
     def _calculate_session_metrics(
-        self, trades: List[TradeRecord], session_start: datetime, session_end: datetime
+        self,
+        trades: List[TradeRecord],
+        session_start: datetime,
+        session_end: datetime,
     ) -> Dict:
         """Calculate metrics for a trading session"""
 
@@ -416,7 +427,12 @@ class ReportGenerator:
 
             # Plot optimization progress
             ax.plot(
-                trials, values, "o-", alpha=0.6, label="Trial Values", color="lightblue"
+                trials,
+                values,
+                "o-",
+                alpha=0.6,
+                label="Trial Values",
+                color="lightblue",
             )
             ax.plot(
                 trials,
@@ -429,7 +445,9 @@ class ReportGenerator:
 
             # Formatting
             ax.set_title(
-                "Hyperparameter Optimization Progress", fontsize=16, fontweight="bold"
+                "Hyperparameter Optimization Progress",
+                fontsize=16,
+                fontweight="bold",
             )
             ax.set_xlabel("Trial", fontsize=12)
             ax.set_ylabel("Objective Value", fontsize=12)

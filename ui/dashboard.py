@@ -134,7 +134,11 @@ class DashboardData:
 
             current_date += timedelta(days=1)
 
-        return {"dates": dates, "values": portfolio_values, "pnl": cumulative_pnl}
+        return {
+            "dates": dates,
+            "values": portfolio_values,
+            "pnl": cumulative_pnl,
+        }
 
     async def get_strategy_performance(self) -> List[Dict]:
         """Get performance breakdown by strategy"""
@@ -214,7 +218,7 @@ class DashboardData:
                 "start_date": (
                     row["start_date"].isoformat() if row["start_date"] else None
                 ),
-                "end_date": row["end_date"].isoformat() if row["end_date"] else None,
+                "end_date": (row["end_date"].isoformat() if row["end_date"] else None),
                 "last_updated": (
                     row["last_updated"].isoformat() if row["last_updated"] else None
                 ),

@@ -9,11 +9,13 @@ import typer
 from pathlib import Path
 
 from rich.table import Table
+from rich.console import Console
 
-from ui.output import OutputHandler
+from constants.icons import Icon
+from rich.panel import Panel
+from rich.text import Text
 
-
-logger = OutputHandler("ui.cli")
+console = Console()
 
 app = typer.Typer(help="Cryptocurrency Trading Bot CLI")
 
@@ -43,52 +45,58 @@ app.add_typer(monitor_app, name="monitor")
 @app.command("status")
 def show_status():
     """Show bot status"""
-    ok_status = "✅ OK"
-    missing_status = "❌ Missing"
+    ok_status = f"{Icon.SUCCESS} OK"
+    missing_status = f"{Icon.ERROR} Missing"
     status_info = {
         "Configuration": missing_status,
         "Data": missing_status,
         "Database": missing_status,
-        "Models": missing_status
+        "Models": missing_status,
     }
 
     # Check configuration
     paths = {
         "Configuration": "config.json",
-        "Data": "data", 
+        "Data": "data",
         "Database": "trading_bot.db",
-        "Models": "artifacts"
+        "Models": "artifacts",
     }
 
     # Check all paths and update status
     for key, path in paths.items():
-        if Path(path).exists():
-            status_info[key] = ok_status
+        try:
+            if Path(path).exists():
+                status_info[key] = ok_status
+        except (PermissionError, OSError):
+            # Handle permission errors or other OS-level errors gracefully
+            # Status remains as missing_status
+            pass
 
-    table = Table(title="🤖 Trading Bot Status")
+    table = Table(title=f"{Icon.ROBOT} Trading Bot Status")
     table.add_column("Directory", style="cyan")
     table.add_column("Status", style="cyan")
 
     for file, status in status_info.items():
         status_style = "green" if status == ok_status else "red"
         table.add_row(file, f"[{status_style}]{status}[/{status_style}]")
-    
-    logger.console.print(table)
+
+    console.print(table)
 
 
 @app.command("version")
 def show_version():
     """Show bot version information"""
-    version_info = {"Bot Version": "1.0.0", "Python": "3.10+", "Created": "2024"}
+    version_text = Text()
+    version_text.append("Bot Version: ", style="cyan")
+    version_text.append("1.0.0\n", style="green")
+    version_text.append("Python: ", style="cyan")
+    version_text.append("3.12.8\n", style="green")
+    version_text.append("Created: ", style="cyan")
+    version_text.append("2024", style="green")
 
-    table = Table(title="Version Information")
-    table.add_column("Component", style="cyan")
-    table.add_column("Version", style="green")
+    panel = Panel(version_text, title="Version Information", border_style="blue")
 
-    for component, version in version_info.items():
-        table.add_row(component, version)
-
-    logger.console.print(table)
+    console.print(panel)
 
 
 if __name__ == "__main__":

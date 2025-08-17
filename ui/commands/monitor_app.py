@@ -1,6 +1,7 @@
 """
 Advanced monitoring and analytics commands for the trading bot CLI
 """
+
 import typer
 import time
 from datetime import datetime, timezone
@@ -40,16 +41,16 @@ def monitor_market_conditions(
 
             # Get market assessment (simulated)
             # market_conditions = advanced_safety_manager.get_market_assessment(symbol)
-            
+
             # Sample market conditions for demonstration
             market_conditions = {
                 "regime": "normal",
-                "trend_direction": "sideways", 
+                "trend_direction": "sideways",
                 "trend_strength": 0.4,
                 "volatility_percentile": 0.35,
                 "volume_profile": "normal",
                 "correlation_breakdown": False,
-                "favorable_for_grid": True
+                "favorable_for_grid": True,
             }
 
             # Clear screen and show current conditions
@@ -73,9 +74,11 @@ def monitor_market_conditions(
             )
 
             # Trend analysis
-            trend_style = {"up": "green", "down": "red", "sideways": "blue"}.get(
-                market_conditions["trend_direction"], "white"
-            )
+            trend_style = {
+                "up": "green",
+                "down": "red",
+                "sideways": "blue",
+            }.get(market_conditions["trend_direction"], "white")
 
             logger.console.print(
                 f"Trend: [{trend_style}]{market_conditions['trend_direction'].upper()}[/{trend_style}] "
@@ -87,7 +90,9 @@ def monitor_market_conditions(
                 "green"
                 if market_conditions["volatility_percentile"] < 0.3
                 else (
-                    "yellow" if market_conditions["volatility_percentile"] < 0.7 else "red"
+                    "yellow"
+                    if market_conditions["volatility_percentile"] < 0.7
+                    else "red"
                 )
             )
             logger.console.print(
@@ -166,7 +171,10 @@ def monitor_performance(
             status_style = "red"
 
         table.add_row(
-            metric_name, current, target, f"[{status_style}]{status}[/{status_style}]"
+            metric_name,
+            current,
+            target,
+            f"[{status_style}]{status}[/{status_style}]",
         )
 
     logger.console.print(table)
@@ -191,7 +199,9 @@ def monitor_errors(
         False, "--follow", "-f", help="Follow error log in real-time"
     ),
     severity: Optional[str] = typer.Option(
-        None, "--severity", help="Filter by severity: low, medium, high, critical"
+        None,
+        "--severity",
+        help="Filter by severity: low, medium, high, critical",
     ),
     hours: int = typer.Option(1, "--hours", help="Show errors from last N hours"),
 ):
@@ -208,7 +218,11 @@ def monitor_errors(
             # Simulate real-time error monitoring
             sample_errors = [
                 ("INFO", "Network", "Connection restored to Binance API"),
-                ("WARNING", "Trading", "Order partially filled, adjusting grid"),
+                (
+                    "WARNING",
+                    "Trading",
+                    "Order partially filled, adjusting grid",
+                ),
                 ("ERROR", "Data", "Price feed timeout, using cached data"),
                 ("INFO", "Safety", "Risk level returned to normal"),
             ]
@@ -234,8 +248,8 @@ def monitor_errors(
     else:
         # Show static error summary
         # error_summary = enhanced_error_handler.get_error_summary(hours)
-        
-        # Sample error summary for demonstration  
+
+        # Sample error summary for demonstration
         error_summary = {
             "total_errors": 5,
             "recent_errors": [
@@ -245,17 +259,17 @@ def monitor_errors(
                     "category": "Network",
                     "title": "API Rate Limit Approached",
                     "message": "Binance API rate limit at 80%, throttling requests",
-                    "recovery_action": "Automatically reduced request frequency"
+                    "recovery_action": "Automatically reduced request frequency",
                 },
                 {
-                    "timestamp": "2025-08-10T06:20:00Z", 
+                    "timestamp": "2025-08-10T06:20:00Z",
                     "severity": "low",
                     "category": "Trading",
                     "title": "Order Adjustment",
                     "message": "Grid order adjusted due to price movement",
-                    "recovery_action": "Recalculated grid levels"
-                }
-            ]
+                    "recovery_action": "Recalculated grid levels",
+                },
+            ],
         }
 
         if error_summary["total_errors"] == 0:
@@ -271,7 +285,7 @@ def monitor_errors(
 
             severity_style = {
                 "low": "green",
-                "medium": "yellow", 
+                "medium": "yellow",
                 "high": "red",
                 "critical": "red bold",
             }.get(error.get("severity", ""), "white")

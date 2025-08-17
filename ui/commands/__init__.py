@@ -5,7 +5,7 @@ This package contains all the command implementations organized by functionality
 
 Command Apps:
 - config_app: Configuration management commands
-- grid_app: Grid trading commands  
+- grid_app: Grid trading commands
 - safety_app: Safety and risk management commands
 - monitor_app: Advanced monitoring and analytics commands
 - data_app: Data management commands
@@ -25,7 +25,7 @@ from .trade_app import trade_app
 
 __all__ = [
     "config_app",
-    "grid_app", 
+    "grid_app",
     "safety_app",
     "monitor_app",
     "data_app",

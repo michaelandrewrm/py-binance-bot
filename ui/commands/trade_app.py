@@ -1,6 +1,7 @@
 """
 Trading commands for the trading bot CLI
 """
+
 import typer
 from ui.error_handling import handle_cli_errors
 from ui.output import OutputHandler
@@ -46,7 +47,7 @@ def start_live_trading(
 
     # Import and redirect to appropriate grid command
     from ui.commands.grid_app import start_ai_grid, start_manual_grid
-    
+
     # Redirect to appropriate grid command
     if mode.lower() == "ai":
         logger.custom(f"🤖 Starting AI grid mode for {symbol}...")
@@ -57,7 +58,7 @@ def start_live_trading(
 
 
 @trade_app.command("run")
-@handle_cli_errors  
+@handle_cli_errors
 def run_trading_bot(
     strategy: str = typer.Option("grid", help="Trading strategy to use"),
     symbol: str = typer.Option("BTCUSDC", help="Trading symbol"),

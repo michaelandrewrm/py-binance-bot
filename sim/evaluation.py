@@ -592,7 +592,11 @@ def quick_performance_summary(
 ) -> Dict:
     """Quick performance summary for live monitoring"""
     if not trades:
-        return {"total_pnl": Decimal("0"), "trade_count": 0, "win_rate": Decimal("0")}
+        return {
+            "total_pnl": Decimal("0"),
+            "trade_count": 0,
+            "win_rate": Decimal("0"),
+        }
 
     total_pnl = sum(trade.realized_pnl or Decimal("0") for trade in trades)
     total_fees = sum(trade.fee for trade in trades)

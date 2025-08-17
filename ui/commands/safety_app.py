@@ -1,6 +1,7 @@
 """
 Safety and risk management commands for the trading bot CLI
 """
+
 import typer
 from datetime import datetime, timezone
 from typing import Optional
@@ -22,7 +23,9 @@ def start_safety_monitoring(
     session_id: str = typer.Argument(..., help="Session ID to monitor"),
     symbol: str = typer.Argument(..., help="Trading symbol"),
     alert_level: str = typer.Option(
-        "medium", "--alert-level", help="Alert level: low, medium, high, critical"
+        "medium",
+        "--alert-level",
+        help="Alert level: low, medium, high, critical",
     ),
 ):
     """Start advanced safety monitoring for a trading session"""
@@ -70,7 +73,7 @@ def safety_status(
     if session_id:
         # Show specific session safety status
         # risk_report = advanced_safety_manager.get_risk_report(session_id)
-        
+
         # Sample risk report for demonstration
         risk_report = {
             "risk_level": "moderate",
@@ -78,16 +81,16 @@ def safety_status(
                 "current_drawdown": 0.05,
                 "volatility": 0.25,
                 "sharpe_ratio": 1.5,
-                "var_95": 150.75
+                "var_95": 150.75,
             },
             "recent_alerts": [
                 {
                     "timestamp": "2025-08-10T06:24:00Z",
                     "type": "warning",
                     "title": "Increased Volatility Detected",
-                    "message": "Market volatility increased to 45%, consider reducing position size"
+                    "message": "Market volatility increased to 45%, consider reducing position size",
                 }
-            ]
+            ],
         }
 
         if "error" in risk_report:
@@ -145,27 +148,20 @@ def safety_status(
     else:
         # Show overall safety status
         # error_summary = enhanced_error_handler.get_error_summary(24)
-        
+
         # Sample error summary for demonstration
         error_summary = {
             "total_errors": 3,
-            "by_category": {
-                "network": 1,
-                "trading": 2
-            },
-            "by_severity": {
-                "low": 1,
-                "medium": 2,
-                "high": 0
-            },
+            "by_category": {"network": 1, "trading": 2},
+            "by_severity": {"low": 1, "medium": 2, "high": 0},
             "connection_health": {
                 "overall_healthy": True,
                 "services": {
                     "Binance API": {"healthy": True},
                     "Database": {"healthy": True},
-                    "Redis Cache": {"healthy": True}
-                }
-            }
+                    "Redis Cache": {"healthy": True},
+                },
+            },
         }
 
         logger.custom("🛡️ Overall Safety Status (Last 24 Hours)")
@@ -215,7 +211,9 @@ def show_alerts(
     ),
     hours: int = typer.Option(24, "--hours", help="Show alerts from last N hours"),
     severity: Optional[str] = typer.Option(
-        None, "--severity", help="Filter by severity: low, medium, high, critical"
+        None,
+        "--severity",
+        help="Filter by severity: low, medium, high, critical",
     ),
 ):
     """Show safety alerts and notifications"""

@@ -172,7 +172,10 @@ class HODLBenchmark:
         }
 
     def compare_with_strategy(
-        self, strategy_metrics: Dict, klines: List[KlineData], initial_capital: Decimal
+        self,
+        strategy_metrics: Dict,
+        klines: List[KlineData],
+        initial_capital: Decimal,
     ) -> Dict:
         """
         Compare strategy performance with HODL benchmark
@@ -450,7 +453,10 @@ class BenchmarkSuite:
         self.hodl_benchmark = HODLBenchmark(fee_config)
 
     def run_all_benchmarks(
-        self, klines: List[KlineData], initial_capital: Decimal, strategy_metrics: Dict
+        self,
+        klines: List[KlineData],
+        initial_capital: Decimal,
+        strategy_metrics: Dict,
     ) -> Dict:
         """Run all available benchmarks"""
 

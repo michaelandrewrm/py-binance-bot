@@ -24,7 +24,12 @@ from core.state import (
     Balance,
     BotState,
 )
-from core.sizing import SizingCalculator, ExchangeInfo, FeeConfig, ensure_min_notional
+from core.sizing import (
+    SizingCalculator,
+    ExchangeInfo,
+    FeeConfig,
+    ensure_min_notional,
+)
 from exec.paper_broker import (
     PaperBroker,
     MarketData,

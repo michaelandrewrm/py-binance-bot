@@ -1,6 +1,7 @@
 """
 Data management commands for the trading bot CLI
 """
+
 import typer
 import asyncio
 from datetime import datetime, timezone, timedelta
@@ -45,7 +46,7 @@ def download_data(
                     symbol=symbol,
                     interval=interval,
                     start_time=start_date,
-                    limit=1000
+                    limit=1000,
                 )
 
                 progress.update(task, description=f"Saving {len(klines)} klines...")
@@ -83,16 +84,16 @@ def list_data():
         # For now, show sample data structure
         logger.custom("📊 Available Market Data")
         logger.custom("=" * 30)
-        
+
         # Query unique symbols and intervals from database
         # with repo.db_repo.get_connection() as conn:
         #     cursor = conn.cursor()
         #     cursor.execute(
         #         """
-        #         SELECT symbol, interval, COUNT(*) as count, 
-        #                MIN(open_time) as start_date, 
+        #         SELECT symbol, interval, COUNT(*) as count,
+        #                MIN(open_time) as start_date,
         #                MAX(open_time) as end_date
-        #         FROM klines 
+        #         FROM klines
         #         GROUP BY symbol, interval
         #         ORDER BY symbol, interval
         #     """
@@ -106,19 +107,21 @@ def list_data():
                 "interval": "1h",
                 "count": 720,
                 "start_date": datetime(2024, 1, 1),
-                "end_date": datetime(2024, 1, 30)
+                "end_date": datetime(2024, 1, 30),
             },
             {
-                "symbol": "ETHUSDC", 
+                "symbol": "ETHUSDC",
                 "interval": "1h",
                 "count": 720,
                 "start_date": datetime(2024, 1, 1),
-                "end_date": datetime(2024, 1, 30)
-            }
+                "end_date": datetime(2024, 1, 30),
+            },
         ]
 
         if not rows:
-            logger.custom("📭 No market data found. Use 'data download' to get started.")
+            logger.custom(
+                "📭 No market data found. Use 'data download' to get started."
+            )
             return
 
         table = Table(title="Available Market Data")
@@ -133,12 +136,16 @@ def list_data():
                 row["symbol"],
                 row["interval"],
                 str(row["count"]),
-                row["start_date"].strftime("%Y-%m-%d") if row["start_date"] else "N/A",
-                row["end_date"].strftime("%Y-%m-%d") if row["end_date"] else "N/A",
+                (
+                    row["start_date"].strftime("%Y-%m-%d")
+                    if row["start_date"]
+                    else "N/A"
+                ),
+                (row["end_date"].strftime("%Y-%m-%d") if row["end_date"] else "N/A"),
             )
 
         logger.console.print(table)
-        
+
     except Exception as e:
         logger.error(f"Error listing data: {e}")
         raise typer.Exit(1)

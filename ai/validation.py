@@ -92,7 +92,10 @@ class WalkForwardValidator:
         return periods
 
     async def validate_strategy(
-        self, strategy_class, market_data: List[KlineData], optimization_function=None
+        self,
+        strategy_class,
+        market_data: List[KlineData],
+        optimization_function=None,
     ) -> List[ValidationResult]:
         """
         Run walk-forward validation on a strategy
@@ -220,7 +223,9 @@ class WalkForwardValidator:
         )
 
     def _calculate_overfitting_score(
-        self, train_metrics: PerformanceMetrics, test_metrics: PerformanceMetrics
+        self,
+        train_metrics: PerformanceMetrics,
+        test_metrics: PerformanceMetrics,
     ) -> float:
         """Calculate overfitting score (lower is better)"""
         if train_metrics.total_return == 0:
@@ -272,7 +277,10 @@ class RollingWindowValidator:
         self.step_days = step_days
 
     def validate_parameters(
-        self, strategy_class, market_data: List[KlineData], parameter_ranges: Dict
+        self,
+        strategy_class,
+        market_data: List[KlineData],
+        parameter_ranges: Dict,
     ) -> Dict:
         """Validate parameter stability across rolling windows"""
         windows = self._generate_windows(market_data)

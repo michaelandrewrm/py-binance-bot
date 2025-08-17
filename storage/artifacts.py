@@ -109,7 +109,11 @@ class ArtifactManager:
         return hash_md5.hexdigest()
 
     def save_keras_model(
-        self, model, name: str, version: str = "1.0", metadata: Optional[Dict] = None
+        self,
+        model,
+        name: str,
+        version: str = "1.0",
+        metadata: Optional[Dict] = None,
     ) -> ModelArtifact:
         """Save Keras model"""
         try:
@@ -171,7 +175,11 @@ class ArtifactManager:
             raise
 
     def save_sklearn_model(
-        self, model, name: str, version: str = "1.0", metadata: Optional[Dict] = None
+        self,
+        model,
+        name: str,
+        version: str = "1.0",
+        metadata: Optional[Dict] = None,
     ) -> ModelArtifact:
         """Save scikit-learn model"""
         artifact = ModelArtifact(name, "sklearn", version, metadata)
@@ -275,7 +283,10 @@ class ArtifactManager:
         return str(results_file)
 
     def export_model_bundle(
-        self, model_name: str, version: str = "1.0", include_configs: bool = True
+        self,
+        model_name: str,
+        version: str = "1.0",
+        include_configs: bool = True,
     ) -> str:
         """Export model as a complete bundle"""
         bundle_name = f"{model_name}_v{version}_bundle_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
@@ -436,7 +447,10 @@ class ModelVersionManager:
         return None
 
     def rollback_model(
-        self, model_name: str, target_version: str, environment: str = "production"
+        self,
+        model_name: str,
+        target_version: str,
+        environment: str = "production",
     ):
         """Rollback a model to a previous version"""
         current_version = self.get_deployed_model(model_name, environment)

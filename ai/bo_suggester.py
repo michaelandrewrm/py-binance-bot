@@ -210,7 +210,10 @@ class StrategyOptimizer:
     """
 
     def __init__(
-        self, strategy_class, market_data, initial_capital: Decimal = Decimal("10000")
+        self,
+        strategy_class,
+        market_data,
+        initial_capital: Decimal = Decimal("10000"),
     ):
         self.strategy_class = strategy_class
         self.market_data = market_data

@@ -1,6 +1,7 @@
 """
 Model management commands for the trading bot CLI
 """
+
 import typer
 import asyncio
 import json
@@ -33,14 +34,14 @@ def list_models():
                 "name": "baseline_btcusdc_v1",
                 "model_type": "baseline",
                 "version": "1.0.0",
-                "created_at": "2024-01-15T10:30:00Z"
+                "created_at": "2024-01-15T10:30:00Z",
             },
             {
-                "name": "grid_optimizer_v2", 
+                "name": "grid_optimizer_v2",
                 "model_type": "grid",
                 "version": "2.1.0",
-                "created_at": "2024-01-20T15:45:00Z"
-            }
+                "created_at": "2024-01-20T15:45:00Z",
+            },
         ]
 
         if not models:
@@ -58,11 +59,14 @@ def list_models():
                 "%Y-%m-%d %H:%M"
             )
             table.add_row(
-                model["name"], model["model_type"], model["version"], created_date
+                model["name"],
+                model["model_type"],
+                model["version"],
+                created_date,
             )
 
         logger.console.print(table)
-        
+
     except Exception as e:
         logger.error(f"Error listing models: {e}")
         raise typer.Exit(1)
@@ -106,7 +110,8 @@ def optimize_strategy(
                 # optimizer = BayesianOptimizer()
 
                 progress.update(
-                    task, description=f"Running {n_trials} optimization trials..."
+                    task,
+                    description=f"Running {n_trials} optimization trials...",
                 )
 
                 # Run optimization
@@ -114,15 +119,15 @@ def optimize_strategy(
                     # study = await optimizer.optimize_baseline_strategy(
                     #     klines, n_trials=n_trials
                     # )
-                    
+
                     # Sample optimization results for demonstration
                     best_params = {
                         "lookback_period": 24,
                         "threshold": 0.02,
-                        "position_size": 0.1
+                        "position_size": 0.1,
                     }
                     best_value = 0.1542
-                    
+
                 else:
                     logger.error(f"Unknown strategy: {strategy}")
                     raise typer.Exit(1)
@@ -142,7 +147,11 @@ def optimize_strategy(
                         "best_params": best_params,
                         "best_value": best_value,
                         "optimization_history": [
-                            {"trial": i, "value": best_value * (0.9 + 0.2 * (i / n_trials)), "params": best_params}
+                            {
+                                "trial": i,
+                                "value": best_value * (0.9 + 0.2 * (i / n_trials)),
+                                "params": best_params,
+                            }
                             for i in range(n_trials)
                         ],
                     }

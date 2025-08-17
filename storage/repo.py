@@ -757,7 +757,10 @@ class SQLiteRepository:
             return cursor.lastrowid
 
     def load_orders(
-        self, run_id: str, symbol: Optional[str] = None, status: Optional[str] = None
+        self,
+        run_id: str,
+        symbol: Optional[str] = None,
+        status: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Load orders for a trading run"""
         with self.get_connection() as conn:
@@ -874,7 +877,8 @@ class SQLiteRepository:
 
             # Clean old bot states
             cursor.execute(
-                "DELETE FROM bot_states WHERE created_at_utc < ?", (cutoff_date,)
+                "DELETE FROM bot_states WHERE created_at_utc < ?",
+                (cutoff_date,),
             )
             states_deleted = cursor.rowcount
 

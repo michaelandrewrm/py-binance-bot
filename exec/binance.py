@@ -113,7 +113,10 @@ class BinanceError(Exception):
     """
 
     def __init__(
-        self, message: str, code: Optional[int] = None, response: Optional[Dict] = None
+        self,
+        message: str,
+        code: Optional[int] = None,
+        response: Optional[Dict] = None,
     ) -> None:
         """Initialize BinanceError.
 

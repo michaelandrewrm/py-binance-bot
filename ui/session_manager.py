@@ -18,6 +18,7 @@ from .output import OutputHandler
 
 logger = OutputHandler("ui.session_manager")
 
+
 class TradingMode(Enum):
     MANUAL = "manual"
     AI = "ai"

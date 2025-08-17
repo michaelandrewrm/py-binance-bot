@@ -14,8 +14,20 @@ import asyncio
 import logging
 import uuid
 
-from core.state import Order, OrderSide, OrderType, OrderStatus, Position, Balance
-from core.sizing import SizingCalculator, ExchangeInfo, FeeConfig, ensure_min_notional
+from core.state import (
+    Order,
+    OrderSide,
+    OrderType,
+    OrderStatus,
+    Position,
+    Balance,
+)
+from core.sizing import (
+    SizingCalculator,
+    ExchangeInfo,
+    FeeConfig,
+    ensure_min_notional,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +192,11 @@ class PaperBroker:
     ):
         """Update market data for a symbol"""
         self.market_data[symbol] = MarketData(
-            symbol=symbol, bid=bid, ask=ask, last_price=last_price, volume=volume
+            symbol=symbol,
+            bid=bid,
+            ask=ask,
+            last_price=last_price,
+            volume=volume,
         )
 
         # Check for order fills after market data update

@@ -1,6 +1,7 @@
 """
 Configuration commands for the trading bot CLI
 """
+
 import typer
 
 from typing import List, Dict
@@ -38,16 +39,10 @@ config_app = typer.Typer(help="Configuration management")
 @handle_cli_errors
 def init_config(
     api_key: str = typer.Option(
-        ...,
-        prompt=True,
-        hide_input=True,
-        help="Binance API Key"
+        ..., prompt=True, hide_input=True, help="Binance API Key"
     ),
     api_secret: str = typer.Option(
-        ...,
-        prompt=True,
-        hide_input=True,
-        help="Binance API Secret"
+        ..., prompt=True, hide_input=True, help="Binance API Secret"
     ),
     testnet: bool = typer.Option(True, help="Use Binance Testnet"),
     data_dir: str = typer.Option("data", help="Data directory"),
@@ -166,38 +161,38 @@ def show_config():
 @handle_cli_errors
 def validate_config():
     """Validate current secured configuration"""
-    
+
     # Check for different configuration file types
     config_json_path = Path("config.json")
-    
+
     logger.custom("🔍 Validating Trading Bot Configuration")
     logger.custom("=" * 50)
-    
+
     validation_results = []
-    
+
     logger.custom("📁 Checking configuration file...")
     json_issues = _validate_json_config(config_json_path)
     validation_results.extend(json_issues)
-    
+
     logger.custom("🔒 Checking security configuration and sensitive files...")
     security_issues = _validate_security_settings()
     validation_results.extend(security_issues)
-    
+
     logger.info("📂 Checking directories...")
     directory_issues = _validate_directories()
     validation_results.extend(directory_issues)
-    
+
     # Display results
     _display_validation_results(validation_results)
-    
+
     # Summary
     logger.custom("\n📊 Validation Summary")
     logger.custom("=" * 30)
-    
+
     error_count = sum(1 for issue in validation_results if issue["type"] == "error")
     warning_count = sum(1 for issue in validation_results if issue["type"] == "warning")
     info_count = sum(1 for issue in validation_results if issue["type"] == "info")
-    
+
     if error_count == 0:
         logger.custom("🎉 Configuration validation passed!")
         logger.info(f"   • Warnings: {warning_count}")
@@ -206,12 +201,12 @@ def validate_config():
         logger.error(f"Configuration validation failed with {error_count} errors")
         logger.warning(f"   • Warnings: {warning_count}")
         logger.info(f"   • Info messages: {info_count}")
-        
+
         logger.custom("\n💡 Recommended Actions:")
         logger.info("   • Fix the errors listed above")
         logger.info("   • Run 'config init' to reconfigure if needed")
         logger.info("   • Check file permissions: chmod 600 config.json")
-        
+
         raise typer.Exit(1)
 
 
@@ -221,237 +216,293 @@ def _validate_json_config(config_path: Path) -> List[Dict[str, str]]:
     issues = []
 
     if not config_path.exists():
-        issues.append({
-            "type": "warning",
-            "category": "JSON Config", 
-            "message": f"{config_path} not found"
-        })
+        issues.append(
+            {
+                "type": "warning",
+                "category": "JSON Config",
+                "message": f"{config_path} not found",
+            }
+        )
         return issues
-    
+
     try:
         # Check file permissions
         if not check_file_permissions(config_path):
-            issues.append({
-                "type": "warning",
-                "category": "Security",
-                "message": f"{config_path} has insecure permissions. Run: chmod 600 {config_path}"
-            })
-        
+            issues.append(
+                {
+                    "type": "warning",
+                    "category": "Security",
+                    "message": f"{config_path} has insecure permissions. Run: chmod 600 {config_path}",
+                }
+            )
+
         # Load and validate JSON structure
         config = safe_json_load(str(config_path))
-        
+
         # Check if credentials are encrypted
         is_encrypted = config.get("encrypted", True)
-        
+
         # Required fields validation - adjust based on encryption
         if is_encrypted:
-            required_fields = ["api_key_encrypted", "api_secret_encrypted", "testnet", "data_dir", "log_level"]
+            required_fields = [
+                "api_key_encrypted",
+                "api_secret_encrypted",
+                "testnet",
+                "data_dir",
+                "log_level",
+            ]
             credential_fields = ["api_key_encrypted", "api_secret_encrypted"]
         else:
-            required_fields = ["api_key", "api_secret", "testnet", "data_dir", "log_level"]
+            required_fields = [
+                "api_key",
+                "api_secret",
+                "testnet",
+                "data_dir",
+                "log_level",
+            ]
             credential_fields = ["api_key", "api_secret"]
-        
+
         missing_fields = []
-        
+
         for field in required_fields:
             if field not in config:
                 missing_fields.append(field)
             elif field in credential_fields:
                 if not config[field] or len(config[field].strip()) == 0:
                     missing_fields.append(field + " (empty)")
-        
+
         if missing_fields:
-            issues.append({
-                "type": "error",
-                "category": "JSON Config",
-                "message": f"Missing or insufficient required fields: {', '.join(missing_fields)}"
-            })
-        
+            issues.append(
+                {
+                    "type": "error",
+                    "category": "JSON Config",
+                    "message": f"Missing or insufficient required fields: {', '.join(missing_fields)}",
+                }
+            )
+
         # Validate specific fields
         if "data_dir" in config:
             data_path = Path(config["data_dir"])
             if not data_path.exists():
-                issues.append({
-                    "type": "warning",
-                    "category": "JSON Config",
-                    "message": f"Data directory does not exist: {data_path}"
-                })
-        
+                issues.append(
+                    {
+                        "type": "warning",
+                        "category": "JSON Config",
+                        "message": f"Data directory does not exist: {data_path}",
+                    }
+                )
+
         if "log_level" in config:
             valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
             if config["log_level"].upper() not in valid_levels:
-                issues.append({
-                    "type": "error",
-                    "category": "JSON Config",
-                    "message": f"Invalid log level: {config['log_level']}. Must be one of: {', '.join(valid_levels)}"
-                })
-        
+                issues.append(
+                    {
+                        "type": "error",
+                        "category": "JSON Config",
+                        "message": f"Invalid log level: {config['log_level']}. Must be one of: {', '.join(valid_levels)}",
+                    }
+                )
+
         # Validate API key format (only for unencrypted)
         if not is_encrypted and "api_key" in config and config["api_key"]:
             if not validate_api_key_format(config["api_key"]):
-                issues.append({
-                    "type": "error",
-                    "category": "JSON Config",
-                    "message": "API key format is invalid"
-                })
-        
+                issues.append(
+                    {
+                        "type": "error",
+                        "category": "JSON Config",
+                        "message": "API key format is invalid",
+                    }
+                )
+
         # Validate testnet setting
         if "testnet" in config:
             if not isinstance(config["testnet"], bool):
-                issues.append({
-                    "type": "error",
-                    "category": "JSON Config",
-                    "message": f"testnet must be true or false, got: {config['testnet']}"
-                })
-        
+                issues.append(
+                    {
+                        "type": "error",
+                        "category": "JSON Config",
+                        "message": f"testnet must be true or false, got: {config['testnet']}",
+                    }
+                )
+
         # Check encryption status
         if is_encrypted:
-            issues.append({
-                "type": "info",
-                "category": "JSON Config",
-                "message": "✅ Credentials are encrypted"
-            })
+            issues.append(
+                {
+                    "type": "info",
+                    "category": "JSON Config",
+                    "message": "✅ Credentials are encrypted",
+                }
+            )
         else:
-            issues.append({
-                "type": "warning",
-                "category": "JSON Config",
-                "message": "⚠️ Credentials are stored in plain text"
-            })
-            
+            issues.append(
+                {
+                    "type": "warning",
+                    "category": "JSON Config",
+                    "message": "⚠️ Credentials are stored in plain text",
+                }
+            )
+
     except Exception as e:
-        issues.append({
-            "type": "error",
-            "category": "JSON Config",
-            "message": f"Failed to parse JSON configuration: {e}"
-        })
-    
+        issues.append(
+            {
+                "type": "error",
+                "category": "JSON Config",
+                "message": f"Failed to parse JSON configuration: {e}",
+            }
+        )
+
     return issues
 
 
 def _validate_security_settings() -> List[Dict[str, str]]:
     """Validate security settings and sensitive files"""
     issues = []
-    
+
     # Check if encryption is available
     encryption_available = check_encryption_available()
     if encryption_available:
-        issues.append({
-            "type": "info",
-            "category": "Security",
-            "message": "✅ Encryption capabilities are available"
-        })
+        issues.append(
+            {
+                "type": "info",
+                "category": "Security",
+                "message": "✅ Encryption capabilities are available",
+            }
+        )
     else:
-        issues.append({
-            "type": "warning",
-            "category": "Security",
-            "message": "Encryption not available - install cryptography package for better security"
-        })
-    
+        issues.append(
+            {
+                "type": "warning",
+                "category": "Security",
+                "message": "Encryption not available - install cryptography package for better security",
+            }
+        )
+
     # Check for common security files
     gitignore_path = Path(".gitignore")
     if gitignore_path.exists():
         try:
-            with open(gitignore_path, 'r') as f:
+            with open(gitignore_path, "r") as f:
                 content = f.read()
-                
-            security_patterns = ["*.json", "config.json", ".env", "*.key", "*.pem"]
+
+            security_patterns = [
+                "*.json",
+                "config.json",
+                ".env",
+                "*.key",
+                "*.pem",
+            ]
             missing_patterns = []
             for pattern in security_patterns:
                 if pattern not in content:
                     missing_patterns.append(pattern)
 
             if missing_patterns:
-                issues.append({
-                    "type": "warning",
-                    "category": "Security",
-                    "message": f"Consider adding these patterns to .gitignore: {', '.join(missing_patterns)}"
-                })
+                issues.append(
+                    {
+                        "type": "warning",
+                        "category": "Security",
+                        "message": f"Consider adding these patterns to .gitignore: {', '.join(missing_patterns)}",
+                    }
+                )
 
         except Exception as e:
-            issues.append({
+            issues.append(
+                {
+                    "type": "warning",
+                    "category": "Security",
+                    "message": f"Could not read .gitignore file: {e}",
+                }
+            )
+    else:
+        issues.append(
+            {
                 "type": "warning",
                 "category": "Security",
-                "message": f"Could not read .gitignore file: {e}"
-            })
-    else:
-        issues.append({
-            "type": "warning",
-            "category": "Security",
-            "message": "No .gitignore file found - create one to protect sensitive files"
-        })
-    
+                "message": "No .gitignore file found - create one to protect sensitive files",
+            }
+        )
+
     return issues
 
 
 def _validate_directories() -> List[Dict[str, str]]:
     """Validate required directories"""
     issues = []
-    
+
     # Required directories
     required_dirs = [
         ("data", "Data storage directory"),
         ("data_cache", "Data cache directory"),
         ("logs", "Log files directory (optional)"),
     ]
-    
+
     for dir_name, description in required_dirs:
         dir_path = Path(dir_name)
-        
+
         if dir_path.exists():
-            issues.append({
-                "type": "info",
-                "category": "Directories",
-                "message": f"✅ {description} exists: {dir_path}"
-            })
+            issues.append(
+                {
+                    "type": "info",
+                    "category": "Directories",
+                    "message": f"✅ {description} exists: {dir_path}",
+                }
+            )
         else:
-            issues.append({
-                "type": "info",
-                "category": "Directories",
-                "message": f"📁 {description} will be created: {dir_path}"
-            })
-    
+            issues.append(
+                {
+                    "type": "info",
+                    "category": "Directories",
+                    "message": f"📁 {description} will be created: {dir_path}",
+                }
+            )
+
     # Check database file
     db_path = Path("trading_bot.db")
     if db_path.exists():
-        issues.append({
-            "type": "info",
-            "category": "Database",
-            "message": f"✅ Database file exists: {db_path}"
-        })
+        issues.append(
+            {
+                "type": "info",
+                "category": "Database",
+                "message": f"✅ Database file exists: {db_path}",
+            }
+        )
     else:
-        issues.append({
-            "type": "info",
-            "category": "Database",
-            "message": f"📊 Database will be created on first run: {db_path}"
-        })
-    
+        issues.append(
+            {
+                "type": "info",
+                "category": "Database",
+                "message": f"📊 Database will be created on first run: {db_path}",
+            }
+        )
+
     return issues
 
 
 def _display_validation_results(results: List[Dict[str, str]]) -> None:
     """Display validation results in a formatted table"""
-    
+
     if not results:
         logger.success("No validation issues found!")
         return
-    
+
     # Group results by type
     errors = [r for r in results if r["type"] == "error"]
     warnings = [r for r in results if r["type"] == "warning"]
     info = [r for r in results if r["type"] == "info"]
-    
+
     # Display errors
     if errors:
         logger.error("\nErrors Found:")
         for error in errors:
             logger.custom(f"   [{error['category']}] {error['message']}")
-    
+
     # Display warnings
     if warnings:
         logger.warning("\nWarnings:")
         for warning in warnings:
             logger.custom(f"   [{warning['category']}] {warning['message']}")
-    
+
     # Display info messages
     if info:
         logger.custom("\n💡 Information:")

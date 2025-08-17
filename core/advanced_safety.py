@@ -366,7 +366,8 @@ class AdvancedSafetyManager:
             leverage_ratio=1.0,
             var_95=position_size * Decimal("0.05"),  # 5% VaR estimate
             sharpe_ratio=max(
-                -2.0, min(3.0, float(current_pnl) / max(float(position_size), 1) * 10)
+                -2.0,
+                min(3.0, float(current_pnl) / max(float(position_size), 1) * 10),
             ),
             volatility=volatility,
             correlation_risk=0.3,  # Default moderate correlation

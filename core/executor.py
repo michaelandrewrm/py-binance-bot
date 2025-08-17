@@ -13,7 +13,11 @@ from decimal import Decimal
 
 from core.state import BotState, BotStatus, save_state
 from core.safety import SafetyManager, SafetyAction, RiskLimits
-from core.flatten import FlattenExecutor, FlattenConfig, execute_flatten_operation
+from core.flatten import (
+    FlattenExecutor,
+    FlattenConfig,
+    execute_flatten_operation,
+)
 from exec.binance import BinanceClient
 from core.sizing import FeeConfig
 

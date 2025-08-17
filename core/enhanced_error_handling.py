@@ -149,8 +149,16 @@ class RetryManager:
                 "base_delay": 1.0,
                 "max_delay": 60.0,
             },
-            ErrorCategory.API: {"max_retries": 3, "base_delay": 2.0, "max_delay": 30.0},
-            ErrorCategory.DATA: {"max_retries": 2, "base_delay": 0.5, "max_delay": 5.0},
+            ErrorCategory.API: {
+                "max_retries": 3,
+                "base_delay": 2.0,
+                "max_delay": 30.0,
+            },
+            ErrorCategory.DATA: {
+                "max_retries": 2,
+                "base_delay": 0.5,
+                "max_delay": 5.0,
+            },
             ErrorCategory.TRADING: {
                 "max_retries": 2,
                 "base_delay": 1.0,
@@ -409,7 +417,10 @@ class EnhancedErrorHandler:
         elif error_event.severity == ErrorSeverity.HIGH:
             return RecoveryAction.STOP
         elif error_event.severity == ErrorSeverity.MEDIUM:
-            if error_event.category in [ErrorCategory.NETWORK, ErrorCategory.API]:
+            if error_event.category in [
+                ErrorCategory.NETWORK,
+                ErrorCategory.API,
+            ]:
                 return RecoveryAction.RETRY
             else:
                 return RecoveryAction.PAUSE

@@ -387,7 +387,7 @@ class TradeRecord:
             "timestamp": utc_isoformat(self.timestamp),
             "order_id": self.order_id,
             "client_order_id": self.client_order_id,
-            "realized_pnl": str(self.realized_pnl) if self.realized_pnl else None,
+            "realized_pnl": (str(self.realized_pnl) if self.realized_pnl else None),
         }
 
     @classmethod

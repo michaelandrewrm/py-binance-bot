@@ -39,7 +39,9 @@ class SecurityError(Exception):
 def check_encryption_available() -> bool:
     """Check if encryption is available and configured"""
     if not ENCRYPTION_AVAILABLE:
-        logger.warning("Cryptography library not available. Install with: pip install cryptography")
+        logger.warning(
+            "Cryptography library not available. Install with: pip install cryptography"
+        )
         logger.warning("Falling back to basic credential storage")
         return False
 
@@ -82,7 +84,11 @@ def encrypt_credentials(api_key: str, api_secret: str) -> Dict[str, str]:
     """Encrypt API credentials for secure storage"""
     if not ENCRYPTION_AVAILABLE:
         logger.warning("Storing credentials without encryption")
-        return {"api_key": api_key, "api_secret": api_secret, "encrypted": False}
+        return {
+            "api_key": api_key,
+            "api_secret": api_secret,
+            "encrypted": False,
+        }
 
     try:
         key = get_encryption_key()

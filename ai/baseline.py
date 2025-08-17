@@ -129,11 +129,17 @@ class TechnicalIndicators:
     def bollinger_bands(
         prices: List[Decimal], period: int = 20, std_dev: Decimal = Decimal("2")
     ) -> Tuple[
-        List[Optional[Decimal]], List[Optional[Decimal]], List[Optional[Decimal]]
+        List[Optional[Decimal]],
+        List[Optional[Decimal]],
+        List[Optional[Decimal]],
     ]:
         """Bollinger Bands"""
         if len(prices) < period:
-            return ([None] * len(prices), [None] * len(prices), [None] * len(prices))
+            return (
+                [None] * len(prices),
+                [None] * len(prices),
+                [None] * len(prices),
+            )
 
         sma_values = TechnicalIndicators.sma(prices, period)
         upper_bands = []
@@ -543,14 +549,22 @@ class BaselineEvaluator:
     def _calculate_signal_metrics(self, signals: List[Dict]) -> Dict:
         """Calculate basic metrics for signals"""
         if not signals:
-            return {"total_pnl": Decimal("0"), "win_rate": Decimal("0"), "trades": 0}
+            return {
+                "total_pnl": Decimal("0"),
+                "win_rate": Decimal("0"),
+                "trades": 0,
+            }
 
         trade_pnls = [
             signal.get("pnl", Decimal("0")) for signal in signals if signal.get("pnl")
         ]
 
         if not trade_pnls:
-            return {"total_pnl": Decimal("0"), "win_rate": Decimal("0"), "trades": 0}
+            return {
+                "total_pnl": Decimal("0"),
+                "win_rate": Decimal("0"),
+                "trades": 0,
+            }
 
         total_pnl = sum(trade_pnls)
         winning_trades = sum(1 for pnl in trade_pnls if pnl > 0)
@@ -564,7 +578,7 @@ class BaselineEvaluator:
             "total_pnl": total_pnl,
             "win_rate": win_rate,
             "trades": len(trade_pnls),
-            "avg_pnl": total_pnl / len(trade_pnls) if trade_pnls else Decimal("0"),
+            "avg_pnl": (total_pnl / len(trade_pnls) if trade_pnls else Decimal("0")),
         }
 
 

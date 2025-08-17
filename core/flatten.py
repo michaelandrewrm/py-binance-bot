@@ -14,7 +14,14 @@ from dataclasses import dataclass
 import asyncio
 import logging
 
-from core.state import BotState, Order, OrderStatus, OrderSide, OrderType, utc_now
+from core.state import (
+    BotState,
+    Order,
+    OrderStatus,
+    OrderSide,
+    OrderType,
+    utc_now,
+)
 from core.sizing import FeeConfig
 from exec.binance import BinanceClient
 
@@ -372,7 +379,10 @@ class FlattenExecutor:
 
 # Convenience function for CLI/executor integration
 async def execute_flatten_operation(
-    client: BinanceClient, state: BotState, reason: str, config: FlattenConfig = None
+    client: BinanceClient,
+    state: BotState,
+    reason: str,
+    config: FlattenConfig = None,
 ) -> FlattenResult:
     """Execute flatten operation with default configuration"""
     executor = FlattenExecutor(client, config)

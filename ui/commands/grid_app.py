@@ -1,6 +1,7 @@
 """
 Grid trading commands for the trading bot CLI
 """
+
 import typer
 import asyncio
 import time
@@ -34,6 +35,7 @@ try:
     session_manager = ThreadSafeSessionManager(max_sessions=50, cleanup_threshold=40)
 except Exception as e:
     from ui.output import OutputHandler
+
     logger_temp = OutputHandler("grid_commands")
     logger_temp.error(f"Failed to initialize session manager: {e}")
     session_manager = None
@@ -137,7 +139,9 @@ def start_manual_grid(
 def start_ai_grid(
     symbol: str = typer.Argument(..., help="Trading symbol (e.g., BTCUSDC)"),
     start_immediately: bool = typer.Option(
-        False, "--start", help="Start trading immediately after creating session"
+        False,
+        "--start",
+        help="Start trading immediately after creating session",
     ),
     duration: Optional[str] = typer.Option(
         None, "--duration", "-d", help="Auto-stop duration (e.g., '1h', '30m')"
@@ -146,7 +150,9 @@ def start_ai_grid(
         True, "--paper/--live", help="Paper trading (default) or live"
     ),
     confirm_live: bool = typer.Option(
-        False, "--confirm-live", help="Explicit confirmation for live AI trading"
+        False,
+        "--confirm-live",
+        help="Explicit confirmation for live AI trading",
     ),
 ):
     """Configure grid trading in AI mode - AI suggests optimal parameters"""
@@ -197,7 +203,8 @@ def start_ai_grid(
                     f"AI Confidence: [yellow]{final_params.confidence:.0%}[/yellow]"
                 )
                 if not Confirm.ask(
-                    "Proceed with LIVE AI trading using real money?", default=False
+                    "Proceed with LIVE AI trading using real money?",
+                    default=False,
                 ):
                     logger.custom("Live trading cancelled")
                     logger.custom(f"💡 Session {session_id} created but not started")
@@ -659,13 +666,15 @@ def monitor_session(
             # Clear screen and show status
             logger.console.clear()
             show_static_status(session)
-            
+
             # Show last update time
-            logger.info(f"\nLast update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            logger.info(
+                f"\nLast update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            )
             logger.info(f"Refresh interval: {refresh} seconds")
-            
+
             time.sleep(refresh)
-            
+
     except KeyboardInterrupt:
         logger.custom("\n👋 Monitoring stopped")
 
@@ -819,7 +828,8 @@ def show_live_status(session: TradingSession):
         if session.duration_limit:
             remaining = session.duration_limit - elapsed
             text.append(
-                f"Time Remaining: {format_duration(remaining)}\n", style="yellow"
+                f"Time Remaining: {format_duration(remaining)}\n",
+                style="yellow",
             )
 
             # Progress bar
@@ -877,7 +887,7 @@ def collect_manual_parameters(symbol: str):
     # This would be implemented to collect parameters via CLI prompts
     from ui.session_manager import GridParameters, TradingMode
     from decimal import Decimal
-    
+
     # For now, return sample parameters
     return GridParameters(
         mode=TradingMode.MANUAL,
@@ -885,7 +895,7 @@ def collect_manual_parameters(symbol: str):
         upper_bound=Decimal("35000"),
         grid_count=10,
         investment_per_grid=Decimal("100"),
-        confidence=0.8
+        confidence=0.8,
     )
 
 
@@ -894,7 +904,7 @@ async def get_ai_suggested_parameters(symbol: str):
     # This would be implemented to call the AI system
     from ui.session_manager import GridParameters, TradingMode
     from decimal import Decimal
-    
+
     # For now, return sample AI parameters
     return GridParameters(
         mode=TradingMode.AI,
@@ -902,7 +912,7 @@ async def get_ai_suggested_parameters(symbol: str):
         upper_bound=Decimal("34000"),
         grid_count=8,
         investment_per_grid=Decimal("125"),
-        confidence=0.85
+        confidence=0.85,
     )
 
 

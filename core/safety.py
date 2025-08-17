@@ -328,7 +328,8 @@ class SafetyManager:
 
         self.safety_events.append(event)
         logger.log(
-            self._get_log_level(alert_level), f"Safety event: {rule_name} - {message}"
+            self._get_log_level(alert_level),
+            f"Safety event: {rule_name} - {message}",
         )
 
         # Execute callbacks
@@ -392,7 +393,11 @@ class SafetyManager:
         action = self.evaluate_safety()
 
         if action in [SafetyAction.EMERGENCY_STOP, SafetyAction.FLATTEN]:
-            return False, f"Critical safety condition requires {action.value}", action
+            return (
+                False,
+                f"Critical safety condition requires {action.value}",
+                action,
+            )
         elif action == SafetyAction.PAUSE:
             return False, f"Safety condition requires pause", action
         elif action == SafetyAction.CANCEL_ORDERS:
