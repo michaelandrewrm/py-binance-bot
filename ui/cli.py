@@ -72,15 +72,17 @@ def show_status():
             # Status remains as missing_status
             pass
 
-    table = Table(title=f"{Icon.ROBOT} Trading Bot Status")
-    table.add_column("Directory", style="cyan")
-    table.add_column("Status", style="cyan")
-
+    version_text = Text()
     for file, status in status_info.items():
-        status_style = "green" if status == ok_status else "red"
-        table.add_row(file, f"[{status_style}]{status}[/{status_style}]")
+        color = "green" if status == ok_status else "red"
+        version_text.append(f"{file}: ", style="cyan")
+        version_text.append(f"{status}\n", style=color)
 
-    console.print(table)
+    panel = Panel(
+        version_text, title=f"{Icon.ROBOT} Trading Bot Status", border_style="green"
+    )
+
+    console.print(panel)
 
 
 @app.command("version")
@@ -92,7 +94,7 @@ def show_version():
     version_text.append("Python: ", style="cyan")
     version_text.append("3.12.8\n", style="green")
     version_text.append("Created: ", style="cyan")
-    version_text.append("2024", style="green")
+    version_text.append("2025", style="green")
 
     panel = Panel(version_text, title="Version Information", border_style="blue")
 

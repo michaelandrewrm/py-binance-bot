@@ -291,7 +291,7 @@ def emergency_controls(
 
     if action == "status":
         logger.critical("Emergency Status Check")
-        logger.custom("=" * 30)
+        logger.custom("=" * 50)
 
         # Check if any emergency conditions exist
         emergency_sessions = []  # This would check actual sessions

@@ -25,10 +25,10 @@ def get_historical_klines(
             "close",
             "volume",
             "close_time",
-            "quote_asset_volume",
-            "number_of_trades",
-            "taker_buy_base_asset_volume",
-            "taker_buy_quote_asset_volume",
+            "quote_volume",
+            "trades_count",
+            "taker_buy_volume",
+            "taker_buy_quote_volume",
             "ignore",
         ],
     )
@@ -43,9 +43,9 @@ def get_historical_klines(
         "low",
         "close",
         "volume",
-        "quote_asset_volume",
-        "taker_buy_base_asset_volume",
-        "taker_buy_quote_asset_volume",
+        "quote_volume",
+        "taker_buy_volume",
+        "taker_buy_quote_volume",
     ]
     data[numeric_cols] = data[numeric_cols].astype(float)
 

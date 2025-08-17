@@ -17,7 +17,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from dataclasses import asdict
 
-from .schema import (
+from exec.binance import create_binance_client
+from data.schema import (
     KlineData,
     TradeData,
     TickerData,
@@ -475,9 +476,13 @@ class DataLoader:
             f"Loading klines from source: {symbol} {timeframe.value} {start_date} to {end_date}"
         )
 
-        # Placeholder for actual API call
-        # klines = await self._fetch_klines_from_api(symbol, timeframe, start_date, end_date)
-        klines = []  # Replace with actual implementation
+        # Use the fetch_klines method to get data from API
+        klines = await self.fetch_klines(
+            symbol=symbol,
+            interval=timeframe.value,
+            start_time=start_date,
+            limit=1000,  # Could be configurable based on date range
+        )
 
         # Validate data
         if self.enable_validation and klines:
@@ -554,6 +559,66 @@ class DataLoader:
         """Clear cache"""
         self.cache.clear_cache(older_than_hours)
 
+    async def fetch_klines(
+        self,
+        symbol: str,
+        interval: str,
+        start_time: datetime = None,
+        limit: int = 1000,
+    ) -> List[KlineData]:
+        """
+        Fetch klines directly from API (bypasses cache)
+
+        Args:
+            symbol: Trading symbol (e.g., 'BTCUSDC')
+            interval: Kline interval (e.g., '1h', '1d')
+            start_time: Start time for data fetch
+            limit: Maximum number of klines to fetch
+
+        Returns:
+            List of KlineData objects
+        """
+
+        # Convert string interval to TimeFrame enum
+        try:
+            timeframe = TimeFrame(interval)
+        except ValueError:
+            raise ValueError(f"Unsupported interval: {interval}")
+
+        # Create Binance client
+        client = await create_binance_client()
+
+        try:
+            # Convert start_time to timestamp if provided
+            start_timestamp = None
+            if start_time:
+                start_timestamp = int(start_time.timestamp() * 1000)
+
+            # Fetch raw data from Binance
+            klines = await client.get_klines(
+                symbol=symbol,
+                interval=interval,
+                start_time=start_timestamp,
+                limit=limit,
+            )
+
+            # Convert to KlineData objects
+            klines = klines_from_binance(klines, symbol, timeframe)
+
+            # Validate data if validation is enabled
+            if self.enable_validation and klines:
+                is_valid, errors = self.validator.validate_klines(klines)
+                if not is_valid:
+                    error_msg = f"Kline validation failed: {'; '.join(errors)}"
+                    logger.error(error_msg)
+                    raise DataValidationError(error_msg)
+
+            logger.info(f"Fetched {len(klines)} klines for {symbol} {interval}")
+            return klines
+
+        finally:
+            await client.close_session()
+
 
 # Utility functions
 
@@ -589,13 +654,3 @@ def create_data_loader(
         )
 
     return DataLoader(cache_config)
-
-
-async def load_historical_data(
-    loader: DataLoader, symbol: str, timeframe: TimeFrame, days_back: int = 30
-) -> List[KlineData]:
-    """Load historical data for the specified number of days"""
-    end_date = datetime.now(timezone.utc)
-    start_date = end_date - timedelta(days=days_back)
-
-    return await loader.load_klines(symbol, timeframe, start_date, end_date)

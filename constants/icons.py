@@ -143,6 +143,10 @@ class Icon(Enum):
     LINK = "🔗"
     MAGIC_WAND = "🪄"
 
+    # === Others ===
+    INFO = "ℹ️"
+    LIGHT_BULB = "💡"
+
     def __str__(self) -> str:
         """Return the emoji value as string for easy printing."""
         return self.value

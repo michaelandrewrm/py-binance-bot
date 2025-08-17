@@ -355,7 +355,7 @@ class SQLiteRepository:
             kline_data = [
                 (
                     k.symbol,
-                    k.interval,
+                    k.timeframe.value,
                     utc_isoformat(k.open_time),
                     utc_isoformat(k.close_time),
                     float(k.open_price),
@@ -363,9 +363,9 @@ class SQLiteRepository:
                     float(k.low_price),
                     float(k.close_price),
                     float(k.volume),
-                    float(k.quote_asset_volume or 0),
-                    k.number_of_trades or 0,
-                    float(k.taker_buy_base_volume or 0),
+                    float(k.quote_volume or 0),
+                    k.trades_count or 0,
+                    float(k.taker_buy_volume or 0),
                     float(k.taker_buy_quote_volume or 0),
                 )
                 for k in klines
@@ -436,9 +436,9 @@ class SQLiteRepository:
                     low_price=Decimal(str(row["low_price"])),
                     close_price=Decimal(str(row["close_price"])),
                     volume=Decimal(str(row["volume"])),
-                    quote_asset_volume=Decimal(str(row["quote_volume"] or 0)),
-                    number_of_trades=row["trades_count"],
-                    taker_buy_base_volume=Decimal(str(row["taker_buy_volume"] or 0)),
+                    quote_volume=Decimal(str(row["quote_volume"] or 0)),
+                    trades_count=row["trades_count"],
+                    taker_buy_volume=Decimal(str(row["taker_buy_volume"] or 0)),
                     taker_buy_quote_volume=Decimal(
                         str(row["taker_buy_quote_volume"] or 0)
                     ),
@@ -971,10 +971,10 @@ class FileRepository:
                     "low": float(k.low_price),
                     "close": float(k.close_price),
                     "volume": float(k.volume),
-                    "quote_volume": float(k.quote_asset_volume or 0),
-                    "trades": k.number_of_trades or 0,
-                    "taker_buy_base": float(k.taker_buy_base_volume or 0),
-                    "taker_buy_quote": float(k.taker_buy_quote_volume or 0),
+                    "quote_volume": float(k.quote_volume or 0),
+                    "trades": k.trades_count or 0,
+                    "taker_buy_volume": float(k.taker_buy_volume or 0),
+                    "taker_buy_quote_volume": float(k.taker_buy_quote_volume or 0),
                 }
             )
 
@@ -1007,10 +1007,10 @@ class FileRepository:
                 low_price=Decimal(str(row["low"])),
                 close_price=Decimal(str(row["close"])),
                 volume=Decimal(str(row["volume"])),
-                quote_asset_volume=Decimal(str(row["quote_volume"])),
-                number_of_trades=int(row["trades"]),
-                taker_buy_base_volume=Decimal(str(row["taker_buy_base"])),
-                taker_buy_quote_volume=Decimal(str(row["taker_buy_quote"])),
+                quote_volume=Decimal(str(row["quote_volume"])),
+                trades_count=int(row["trades"]),
+                taker_buy_volume=Decimal(str(row["taker_buy_volume"])),
+                taker_buy_quote_volume=Decimal(str(row["taker_buy_quote_volume"])),
             )
             klines.append(kline)
 
@@ -1089,7 +1089,7 @@ class HybridRepository:
         # Group by symbol and interval for Parquet files
         grouped = {}
         for kline in klines:
-            key = (kline.symbol, kline.interval)
+            key = (kline.symbol, kline.timeframe.value)
             if key not in grouped:
                 grouped[key] = []
             grouped[key].append(kline)

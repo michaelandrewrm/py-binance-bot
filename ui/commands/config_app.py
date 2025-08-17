@@ -27,9 +27,10 @@ from ui.security import (
     validate_file_path,
     check_encryption_available,
 )
-from ui.output import OutputHandler
+from utils.output import OutputHandler
+from constants.icons import Icon
 
-logger = OutputHandler("ui.cli")
+logger = OutputHandler()
 
 # Configuration commands will be registered to this app instance
 config_app = typer.Typer(help="Configuration management")
@@ -148,11 +149,11 @@ def show_config():
     for key, value in display_config.items():
         table.add_row(key, str(value))
 
-    logger.console.print(table)
+    logger.print(table)
 
     # Show security status
     if config.get("encrypted", True):
-        logger.custom("🔒 Credentials are encrypted")
+        logger.print(f"{Icon.LOCK} Credentials are encrypted")
     else:
         logger.warning("Credentials are stored in plain text")
 
@@ -165,20 +166,20 @@ def validate_config():
     # Check for different configuration file types
     config_json_path = Path("config.json")
 
-    logger.custom("🔍 Validating Trading Bot Configuration")
-    logger.custom("=" * 50)
+    logger.print(f"{Icon.SEARCH} Validating Trading Bot Configuration")
+    logger.print("=" * 50)
 
     validation_results = []
 
-    logger.custom("📁 Checking configuration file...")
+    logger.print(f"{Icon.FILE} Checking configuration file...")
     json_issues = _validate_json_config(config_json_path)
     validation_results.extend(json_issues)
 
-    logger.custom("🔒 Checking security configuration and sensitive files...")
+    logger.print(f"{Icon.LOCK} Checking security configuration and sensitive files...")
     security_issues = _validate_security_settings()
     validation_results.extend(security_issues)
 
-    logger.info("📂 Checking directories...")
+    logger.info(f"{Icon.FOLDER} Checking directories...")
     directory_issues = _validate_directories()
     validation_results.extend(directory_issues)
 
@@ -186,23 +187,23 @@ def validate_config():
     _display_validation_results(validation_results)
 
     # Summary
-    logger.custom("\n📊 Validation Summary")
-    logger.custom("=" * 30)
+    logger.print(f"\n{Icon.BAR_CHART} Validation Summary")
+    logger.print("=" * 50)
 
     error_count = sum(1 for issue in validation_results if issue["type"] == "error")
     warning_count = sum(1 for issue in validation_results if issue["type"] == "warning")
     info_count = sum(1 for issue in validation_results if issue["type"] == "info")
 
     if error_count == 0:
-        logger.custom("🎉 Configuration validation passed!")
+        logger.success("Configuration validation passed!")
         logger.info(f"   • Warnings: {warning_count}")
         logger.info(f"   • Info messages: {info_count}")
     else:
         logger.error(f"Configuration validation failed with {error_count} errors")
-        logger.warning(f"   • Warnings: {warning_count}")
+        logger.info(f"   • Warnings: {warning_count}")
         logger.info(f"   • Info messages: {info_count}")
 
-        logger.custom("\n💡 Recommended Actions:")
+        logger.print(f"\n{Icon.LIGHT_BULB} Recommended Actions:")
         logger.info("   • Fix the errors listed above")
         logger.info("   • Run 'config init' to reconfigure if needed")
         logger.info("   • Check file permissions: chmod 600 config.json")
@@ -331,7 +332,7 @@ def _validate_json_config(config_path: Path) -> List[Dict[str, str]]:
                 {
                     "type": "info",
                     "category": "JSON Config",
-                    "message": "✅ Credentials are encrypted",
+                    "message": f"{Icon.SUCCESS} Credentials are encrypted",
                 }
             )
         else:
@@ -339,7 +340,7 @@ def _validate_json_config(config_path: Path) -> List[Dict[str, str]]:
                 {
                     "type": "warning",
                     "category": "JSON Config",
-                    "message": "⚠️ Credentials are stored in plain text",
+                    "message": f"{Icon.WARNING} Credentials are stored in plain text",
                 }
             )
 
@@ -366,7 +367,7 @@ def _validate_security_settings() -> List[Dict[str, str]]:
             {
                 "type": "info",
                 "category": "Security",
-                "message": "✅ Encryption capabilities are available",
+                "message": f"{Icon.SUCCESS} Encryption capabilities are available",
             }
         )
     else:
@@ -445,7 +446,7 @@ def _validate_directories() -> List[Dict[str, str]]:
                 {
                     "type": "info",
                     "category": "Directories",
-                    "message": f"✅ {description} exists: {dir_path}",
+                    "message": f"{Icon.SUCCESS} {description} exists: {dir_path}",
                 }
             )
         else:
@@ -453,7 +454,7 @@ def _validate_directories() -> List[Dict[str, str]]:
                 {
                     "type": "info",
                     "category": "Directories",
-                    "message": f"📁 {description} will be created: {dir_path}",
+                    "message": f"{Icon.FOLDER} {description} will be created: {dir_path}",
                 }
             )
 
@@ -464,7 +465,7 @@ def _validate_directories() -> List[Dict[str, str]]:
             {
                 "type": "info",
                 "category": "Database",
-                "message": f"✅ Database file exists: {db_path}",
+                "message": f"{Icon.SUCCESS} Database file exists: {db_path}",
             }
         )
     else:
@@ -472,7 +473,7 @@ def _validate_directories() -> List[Dict[str, str]]:
             {
                 "type": "info",
                 "category": "Database",
-                "message": f"📊 Database will be created on first run: {db_path}",
+                "message": f"{Icon.BAR_CHART} Database will be created on first run: {db_path}",
             }
         )
 
@@ -495,16 +496,16 @@ def _display_validation_results(results: List[Dict[str, str]]) -> None:
     if errors:
         logger.error("\nErrors Found:")
         for error in errors:
-            logger.custom(f"   [{error['category']}] {error['message']}")
+            logger.print(f"   [{error['category']}] {error['message']}")
 
     # Display warnings
     if warnings:
         logger.warning("\nWarnings:")
         for warning in warnings:
-            logger.custom(f"   [{warning['category']}] {warning['message']}")
+            logger.print(f"   [{warning['category']}] {warning['message']}")
 
     # Display info messages
     if info:
-        logger.custom("\n💡 Information:")
+        logger.info(f"\nInformation:")
         for item in info:
-            logger.custom(f"   [{item['category']}] {item['message']}")
+            logger.print(f"   [{item['category']}] {item['message']}")

@@ -11,6 +11,9 @@ Price channels constructed around a moving average using volatility measurements
 ### **Mean Reversion**
 A trading strategy based on the assumption that asset prices will return to their historical average over time. Involves buying oversold conditions and selling overbought conditions.
 
+### **OHLCV (Open, High, Low, Close, Volume)**
+Standard market data format representing the opening price, highest price, lowest price, closing price, and trading volume for a specific time period (candlestick). This is the fundamental data structure used in technical analysis and trading systems.
+
 ### **Signal Confidence**
 A quantitative measure (typically 0.0-1.0) indicating the reliability or strength of a trading signal. Higher confidence suggests greater probability of successful trade execution.
 

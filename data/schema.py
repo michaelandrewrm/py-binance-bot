@@ -5,12 +5,12 @@ This module defines data schemas and type definitions for data exchange
 between different components of the trading system.
 """
 
+import json
 from typing import List, Optional, Dict, Any, Union
 from decimal import Decimal
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from enum import Enum
-import json
 
 
 def utc_isoformat(dt: datetime) -> str:
