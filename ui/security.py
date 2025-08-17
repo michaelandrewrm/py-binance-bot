@@ -36,7 +36,7 @@ class SecurityError(Exception):
     pass
 
 
-def check_encryption_available():
+def check_encryption_available() -> bool:
     """Check if encryption is available and configured"""
     if not ENCRYPTION_AVAILABLE:
         logger.warning("Cryptography library not available. Install with: pip install cryptography")

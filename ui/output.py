@@ -6,7 +6,7 @@ eliminating the need for dual console.print() and logger calls.
 """
 
 import logging
-from typing import Optional, Any
+from typing import Optional
 from enum import Enum
 from rich.console import Console
 

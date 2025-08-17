@@ -159,6 +159,7 @@ class DataValidator:
 
         return len(errors) == 0, errors
 
+
     @staticmethod
     def validate_trades(trades: List[TradeData]) -> Tuple[bool, List[str]]:
         """Validate trade data"""
@@ -433,7 +434,9 @@ class DataLoader:
     """
 
     def __init__(
-        self, cache_config: CacheConfig = None, enable_validation: bool = True
+        self,
+        cache_config: CacheConfig = None,
+        enable_validation: bool = True
     ):
         self.cache_config = cache_config or CacheConfig()
         self.cache = ParquetCache(self.cache_config)
